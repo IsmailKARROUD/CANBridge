@@ -22,3 +22,9 @@
 9	176	1770824571746928984	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/mocs_compilation.cpp	85f06d846e3832bf
 176	2293	1770824571914279986	CMakeFiles/CANBridge.dir/tcpserver.cpp.o	1f2255f0f1037327
 2293	2537	1770824574030965733	CANBridge.app/Contents/MacOS/CANBridge	a5863b3007fdcf41
+10	193	1770826368800770217	CANBridge_autogen/timestamp	85f06d846e3832bf
+10	193	1770826368800770217	CANBridge_autogen/mocs_compilation.cpp	85f06d846e3832bf
+10	193	1770826368800770217	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/timestamp	85f06d846e3832bf
+10	193	1770826368800770217	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/mocs_compilation.cpp	85f06d846e3832bf
+193	2821	1770826368984017897	CMakeFiles/CANBridge.dir/mainwindow.cpp.o	3b985e94fbd6323c
+2821	3088	1770826371612076082	CANBridge.app/Contents/MacOS/CANBridge	a5863b3007fdcf41

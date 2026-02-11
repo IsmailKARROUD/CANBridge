@@ -140,6 +140,9 @@ void MainWindow::setupSimulatorTab()
     connect(sendOnceBtn, &QPushButton::clicked, this, &MainWindow::onSendFrame);
     connect(sendPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onSendPeriodic);
     connect(stopPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onStopPeriodic);
+    connect(canIdEdit, &QLineEdit::textChanged, [this]() {
+        canIdEdit->setStyleSheet("");  // Clear error styling
+    });
 }
 
 // Build Analyzer tab UI (client/receiver side)
@@ -237,21 +240,35 @@ void MainWindow::onStopServer()
 // Send a single CAN frame immediately
 void MainWindow::onSendFrame()
 {
-    // Parse CAN ID from hex string (e.g., "0x123" or "123")
+    // Validate CAN ID
     bool ok;
-    quint32 id = canIdEdit->text().toUInt(&ok, 16);
-    if (!ok) return;  // Invalid format, abort
-
-    // Parse data bytes from space-separated hex (e.g., "01 02 03")
-    QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    quint8 data[8] = {0};  // Initialize to zero
-    for (int i = 0; i < qMin(dataList.size(), 8); ++i) {
-        data[i] = dataList[i].toUInt(&ok, 16);
+    QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
+    quint32 id = idText.toUInt(&ok, 16);
+    if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
+        serverStatusLabel->setText("Error: Invalid CAN ID");
+        return;
     }
 
-    // Create and send frame
+    // Validate and parse data bytes
+    QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
+    if (dataList.size() > 8) {
+        serverStatusLabel->setText("Error: Max 8 data bytes");
+        return;
+    }
+
+    quint8 data[8] = {0};
+    for (int i = 0; i < dataList.size(); ++i) {
+        quint32 byte = dataList[i].toUInt(&ok, 16);
+        if (!ok || byte > 0xFF) {
+            serverStatusLabel->setText("Error: Invalid data byte");
+            return;
+        }
+        data[i] = static_cast<quint8>(byte);
+    }
+
     CANFrame frame(id, dlcSpin->value(), data);
     server->sendFrame(frame);
+    serverStatusLabel->setText("Frame sent");
 }
 
 // Start periodic transmission of configured frame
@@ -259,13 +276,28 @@ void MainWindow::onSendPeriodic()
 {
     // Parse ID and data (same as onSendFrame)
     bool ok;
-    quint32 id = canIdEdit->text().toUInt(&ok, 16);
-    if (!ok) return;
+    QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
+    quint32 id = idText.toUInt(&ok, 16);
+    if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
+        serverStatusLabel->setText("Error: Invalid CAN ID");
+        return;
+    }
 
+    // Validate and parse data bytes
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
+    if (dataList.size() > 8) {
+        serverStatusLabel->setText("Error: Max 8 data bytes");
+        return;
+    }
+
     quint8 data[8] = {0};
-    for (int i = 0; i < qMin(dataList.size(), 8); ++i) {
-        data[i] = dataList[i].toUInt(&ok, 16);
+    for (int i = 0; i < dataList.size(); ++i) {
+        quint32 byte = dataList[i].toUInt(&ok, 16);
+        if (!ok || byte > 0xFF) {
+            serverStatusLabel->setText("Error: Invalid data byte");
+            return;
+        }
+        data[i] = static_cast<quint8>(byte);
     }
 
     // Add to periodic transmission list
