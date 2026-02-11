@@ -385,9 +385,33 @@
 	"HEADERS" : 
 	[
 		[
+			"/Users/ismac/project/QtProjects/CANBridge/canframe.h",
+			"MU",
+			"EWIEGA46WW/moc_canframe.cpp",
+			null
+		],
+		[
 			"/Users/ismac/project/QtProjects/CANBridge/mainwindow.h",
 			"MU",
 			"EWIEGA46WW/moc_mainwindow.cpp",
+			null
+		],
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/messagemodel.h",
+			"MU",
+			"EWIEGA46WW/moc_messagemodel.cpp",
+			null
+		],
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/tcpclient.h",
+			"MU",
+			"EWIEGA46WW/moc_tcpclient.cpp",
+			null
+		],
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/tcpserver.h",
+			"MU",
+			"EWIEGA46WW/moc_tcpserver.cpp",
 			null
 		]
 	],
@@ -451,12 +475,20 @@
 	"SETTINGS_FILE" : "/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CMakeFiles/CANBridge_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
+		[ "/Users/ismac/project/QtProjects/CANBridge/canframe.cpp", "MU", null ],
 		[ "/Users/ismac/project/QtProjects/CANBridge/main.cpp", "MU", null ],
 		[
 			"/Users/ismac/project/QtProjects/CANBridge/mainwindow.cpp",
 			"MU",
 			null
-		]
+		],
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/messagemodel.cpp",
+			"MU",
+			null
+		],
+		[ "/Users/ismac/project/QtProjects/CANBridge/tcpclient.cpp", "MU", null ],
+		[ "/Users/ismac/project/QtProjects/CANBridge/tcpserver.cpp", "MU", null ]
 	],
 	"UIC_OPTIONS" : [],
 	"UIC_SEARCH_PATHS" : [],

@@ -704,6 +704,12 @@
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QAbstractTableModel \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QByteArray \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QList \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QObject \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QTimer \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QtTypes \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q17memory.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20functional.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20iterator.h \
@@ -712,6 +718,8 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20utility.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q23type_traits.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q23utility.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstracteventdispatcher.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstractitemmodel.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalgorithms.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalloc.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qanystringview.h \
@@ -722,6 +730,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qatomic.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qatomic_cxx11.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbasicatomic.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbasictimer.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbindingstorage.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbytearray.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbytearrayalgorithms.h \
@@ -741,8 +750,10 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qcontiguouscache.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdatastream.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdeadlinetimer.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdebug.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qendian.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qeventloop.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qexceptionhandling.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qflags.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qfloat16.h \
@@ -754,12 +765,15 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qglobalstatic.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qhash.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qhashfunctions.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiodevice.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiodevicebase.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qitemselectionmodel.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiterable.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiterator.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlatin1stringview.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qline.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlist.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlocale.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlogging.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qmalloc.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qmap.h \
@@ -780,6 +794,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qprocessordetection.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qrect.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qrefcount.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qregularexpression.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qscopedpointer.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qscopeguard.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qset.h \
@@ -815,6 +830,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtenvironmentvariables.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtextstream.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtformat_impl.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtimer.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtmetamacros.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtnoop.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtpreprocessorsupport.h \
@@ -825,6 +841,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtversionchecks.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtypeinfo.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtypes.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qurl.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qutf8stringview.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qvariant.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qvarlengtharray.h \
@@ -845,22 +862,65 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qkeysequence.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpaintdevice.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpalette.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpen.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpicture.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpixelformat.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpixmap.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpolygon.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qregion.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qrgb.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qrgba64.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextcursor.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextdocument.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextformat.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextoption.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtgui-config.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtguiexports.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtguiglobal.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtransform.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qvalidator.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/QTcpServer \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/QTcpSocket \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qabstractsocket.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qhostaddress.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtcpserver.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtcpsocket.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetwork-config.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkexports.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkglobal.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLabel \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLineEdit \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QMainWindow \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QPushButton \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QSpinBox \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTabWidget \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTableView \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractbutton.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemdelegate.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemview.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractscrollarea.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractslider.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractspinbox.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qframe.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlabel.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlineedit.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qmainwindow.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qpushbutton.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qrubberband.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qsizepolicy.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qslider.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qspinbox.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qstyle.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qstyleoption.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabbar.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtableview.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabwidget.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgets-config.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsexports.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsglobal.h \
-  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qwidget.h
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qwidget.h \
+  /Users/ismac/project/QtProjects/CANBridge/CANFrame.h \
+  /Users/ismac/project/QtProjects/CANBridge/messagemodel.h \
+  /Users/ismac/project/QtProjects/CANBridge/tcpclient.h \
+  /Users/ismac/project/QtProjects/CANBridge/tcpserver.h

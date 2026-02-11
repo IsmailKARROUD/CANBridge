@@ -10,7 +10,15 @@ qt_add_executable(CANBridge
     main.cpp
     mainwindow.cpp
     mainwindow.h
+    canframe.h
+    canframe.cpp
+    tcpserver.h
+    tcpserver.cpp
+    messagemodel.h
+    messagemodel.cpp
+
     mainwindow.ui
+    tcpclient.h tcpclient.cpp
 )
 
 target_link_libraries(CANBridge
@@ -34,3 +42,6 @@ qt_generate_deploy_app_script(
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
 install(SCRIPT ${deploy_script})
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)

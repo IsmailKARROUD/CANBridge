@@ -703,6 +703,12 @@ CANBridge_autogen/timestamp: \
 	/Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
 	/Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
 	/Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QAbstractTableModel \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QByteArray \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QList \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QObject \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QTimer \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QtTypes \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q17memory.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20functional.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20iterator.h \
@@ -711,6 +717,8 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q20utility.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q23type_traits.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q23utility.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstracteventdispatcher.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstractitemmodel.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalgorithms.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalloc.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qanystringview.h \
@@ -721,6 +729,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qatomic.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qatomic_cxx11.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbasicatomic.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbasictimer.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbindingstorage.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbytearray.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qbytearrayalgorithms.h \
@@ -740,8 +749,10 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qcontiguouscache.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdarwinhelpers.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdatastream.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdeadlinetimer.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qdebug.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qendian.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qeventloop.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qexceptionhandling.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qflags.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qfloat16.h \
@@ -753,12 +764,15 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qglobalstatic.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qhash.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qhashfunctions.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiodevice.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiodevicebase.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qitemselectionmodel.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiterable.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qiterator.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlatin1stringview.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qline.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlist.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlocale.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qlogging.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qmalloc.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qmap.h \
@@ -779,6 +793,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qprocessordetection.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qrect.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qrefcount.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qregularexpression.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qscopedpointer.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qscopeguard.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qset.h \
@@ -814,6 +829,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtenvironmentvariables.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtextstream.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtformat_impl.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtimer.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtmetamacros.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtnoop.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtpreprocessorsupport.h \
@@ -824,6 +840,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtversionchecks.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtypeinfo.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qtypes.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qurl.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qutf8stringview.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qvariant.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qvarlengtharray.h \
@@ -844,20 +861,59 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qkeysequence.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpaintdevice.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpalette.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpen.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpicture.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpixelformat.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpixmap.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qpolygon.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qregion.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qrgb.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qrgba64.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextcursor.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextdocument.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextformat.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtextoption.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtgui-config.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtguiexports.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtguiglobal.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qtransform.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qvalidator.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/Headers/qwindowdefs.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/QTcpServer \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/QTcpSocket \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qabstractsocket.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qhostaddress.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtcpserver.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtcpsocket.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetwork-config.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkexports.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkglobal.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLabel \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLineEdit \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QMainWindow \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QPushButton \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QSpinBox \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTabWidget \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTableView \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractbutton.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemdelegate.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemview.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractscrollarea.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractslider.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractspinbox.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qframe.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlabel.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlineedit.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qmainwindow.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qpushbutton.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qrubberband.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qsizepolicy.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qslider.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qspinbox.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qstyle.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qstyleoption.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabbar.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtableview.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabwidget.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgets-config.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsexports.h \
@@ -1024,6 +1080,31 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets-relwithdebinfo.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkAdditionalTargetInfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkConfig.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkConfigVersion.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkConfigVersionImpl.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkDependencies.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkPlugins.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkTargets-relwithdebinfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6NetworkVersionlessAliasTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginAdditionalTargetInfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginConfig.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargets-relwithdebinfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QAppleNetworkInformationPluginTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginAdditionalTargetInfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginConfig.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargets-relwithdebinfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QSecureTransportBackendPluginTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginAdditionalTargetInfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginConfig.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargets-relwithdebinfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendCertOnlyPluginTargets.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginAdditionalTargetInfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginConfig.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginTargets-relwithdebinfo.cmake \
+	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Network/Qt6QTlsBackendOpenSSLPluginTargets.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Widgets/Qt6QMacStylePluginAdditionalTargetInfo.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Widgets/Qt6QMacStylePluginConfig.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6Widgets/Qt6QMacStylePluginTargets-relwithdebinfo.cmake \
@@ -1046,105 +1127,54 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets-relwithdebinfo.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsTargets.cmake \
 	/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6WidgetsTools/Qt6WidgetsToolsVersionlessTargets.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCXXCompiler.cmake.in \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCXXInformation.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeCompilerIdDetection.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineCXXCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineCompilerABI.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineCompilerId.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineCompilerSupport.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeDetermineSystem.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeFindBinUtils.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeFindDependencyMacro.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeGenericSystem.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeNinjaFindMake.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeParseImplicitIncludeInfo.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeParseImplicitLinkInfo.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeParseLibraryArchitecture.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeSystem.cmake.in \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeTestCXXCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CMakeTestCompilerCommon.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CheckCXXCompilerFlag.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CheckCXXSourceCompiles.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CheckIncludeFileCXX.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/CheckLibraryExists.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/ADSP-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/ARMCC-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/ARMClang-DetermineCompiler.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/AppleClang-CXX.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/AppleClang-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Borland-DetermineCompiler.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Clang-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Clang-DetermineCompilerInternal.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Clang.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Cray-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/CrayClang-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Embarcadero-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Fujitsu-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/GHS-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/GNU.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/HP-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/IAR-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Intel-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/MSVC-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/NVHPC-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/NVIDIA-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/OrangeC-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/PGI-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/PathScale-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/SCO-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/TI-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/TIClang-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Tasking-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/Watcom-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/XL-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/FindOpenGL.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/FindPackageHandleStandardArgs.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/FindPackageMessage.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/FindThreads.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/GNUInstallDirs.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Internal/CMakeDetermineLinkerId.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Internal/CheckCompilerFlag.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Internal/CheckFlagCommonConfig.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Internal/CheckSourceCompiles.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Internal/FeatureTesting.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/MacroAddFileDependencies.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Apple-AppleClang-CXX.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Apple-Clang-CXX.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Apple-Clang.cmake \
-	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Darwin-Determine-CXX.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Darwin-Initialize.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/Darwin.cmake \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/Platform/UnixPaths.cmake \
+	/Users/ismac/project/QtProjects/CANBridge/CANFrame.h \
 	/Users/ismac/project/QtProjects/CANBridge/CMakeLists.txt \
 	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake \
 	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/.qtc/package-manager/maintenance_tool_provider.cmake \
 	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/moc_predefs.h \
 	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake \
 	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CMakeFiles/3.30.5/CMakeSystem.cmake \
+	/Users/ismac/project/QtProjects/CANBridge/canframe.cpp \
+	/Users/ismac/project/QtProjects/CANBridge/canframe.h \
 	/Users/ismac/project/QtProjects/CANBridge/main.cpp \
 	/Users/ismac/project/QtProjects/CANBridge/mainwindow.cpp \
 	/Users/ismac/project/QtProjects/CANBridge/mainwindow.h \
-	/Users/ismac/project/QtProjects/CANBridge/mainwindow.ui \
+	/Users/ismac/project/QtProjects/CANBridge/messagemodel.cpp \
+	/Users/ismac/project/QtProjects/CANBridge/messagemodel.h \
+	/Users/ismac/project/QtProjects/CANBridge/tcpclient.cpp \
+	/Users/ismac/project/QtProjects/CANBridge/tcpclient.h \
+	/Users/ismac/project/QtProjects/CANBridge/tcpserver.cpp \
+	/Users/ismac/project/QtProjects/CANBridge/tcpserver.h \
 	/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/bin/cmake
