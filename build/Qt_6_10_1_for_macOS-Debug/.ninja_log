@@ -1,0 +1,9 @@
+# ninja log v6
+3	1141	1770809144353706659	CANBridge_autogen/timestamp	85f06d846e3832bf
+3	1141	1770809144353706659	CANBridge_autogen/mocs_compilation.cpp	85f06d846e3832bf
+3	1141	1770809144353706659	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/mocs_compilation.cpp	85f06d846e3832bf
+1146	3305	1770809144408565075	CMakeFiles/CANBridge.dir/CANBridge_autogen/mocs_compilation.cpp.o	add5ee423676e25a
+3	1141	1770809144353706659	/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/timestamp	85f06d846e3832bf
+3371	3666	1770809146633191736	CANBridge.app/Contents/MacOS/CANBridge	f878f17a15110fa6
+1147	3333	1770809144408951798	CMakeFiles/CANBridge.dir/main.cpp.o	8264529c015f6256
+1147	3371	1770809144409212057	CMakeFiles/CANBridge.dir/mainwindow.cpp.o	d17524de489f504
