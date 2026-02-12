@@ -22,6 +22,9 @@ public slots:
     void addFrame(const CANFrame& frame);
     void clear();
 
+signals:
+    void frameAdded();
+
 private:
     QList<CANFrame> frames;
     static const int MAX_FRAMES = 10000;  // Limit to prevent memory issues

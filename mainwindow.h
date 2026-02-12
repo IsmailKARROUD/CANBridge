@@ -38,6 +38,10 @@ private slots:
     void onClientConnected();
     void onClientDisconnected();
 
+    // logs
+    void onSaveLog();
+    void onLoadLog();
+
 private:
     void setupSimulatorTab();
     void setupAnalyzerTab();
@@ -72,6 +76,10 @@ private:
     TcpServer* server;
     TcpClient* client;
     MessageModel* messageModel;
+
+    //Logs
+    QPushButton* saveLogBtn;
+    QPushButton* loadLogBtn;
 };
 
 #endif // MAINWINDOW_H

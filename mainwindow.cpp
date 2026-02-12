@@ -4,6 +4,7 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QHeaderView>
+#include <QFileDialog>
 
 // Constructor: Initialize main window and all components
 MainWindow::MainWindow(QWidget *parent)
@@ -28,8 +29,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(client, &TcpClient::connected, this, &MainWindow::onClientConnected);
     connect(client, &TcpClient::disconnected, this, &MainWindow::onClientDisconnected);
 
-    // Update message counter when frames arrive
-    connect(client, &TcpClient::frameReceived, this, [this]() {
+    // Update message counter when frames added
+    connect(messageModel, &MessageModel::frameAdded, this, [this]() {
         messageCountLabel->setText(QString("Messages: %1").arg(messageModel->rowCount()));
     });
 
@@ -198,8 +199,13 @@ void MainWindow::setupAnalyzerTab()
     controlLayout->addWidget(messageCountLabel);
 
     clearBtn = new QPushButton("Clear");
+    saveLogBtn = new QPushButton("Save Log");
+    loadLogBtn = new QPushButton("Load Log");
     controlLayout->addWidget(clearBtn);
+    controlLayout->addWidget(saveLogBtn);
+    controlLayout->addWidget(loadLogBtn);
     controlLayout->addStretch();
+
 
     tableLayout->addLayout(controlLayout);
     tableGroup->setLayout(tableLayout);
@@ -211,6 +217,8 @@ void MainWindow::setupAnalyzerTab()
     connect(connectBtn, &QPushButton::clicked, this, &MainWindow::onConnect);
     connect(disconnectBtn, &QPushButton::clicked, this, &MainWindow::onDisconnect);
     connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClearMessages);
+    connect(saveLogBtn, &QPushButton::clicked, this, &MainWindow::onSaveLog);
+    connect(loadLogBtn, &QPushButton::clicked, this, &MainWindow::onLoadLog);
 }
 
 // ==================== SIMULATOR HANDLERS ====================
@@ -368,4 +376,86 @@ void MainWindow::onClientDisconnected()
     disconnectBtn->setEnabled(false);
     hostEdit->setEnabled(true);
     clientPortSpin->setEnabled(true);
+}
+
+
+void MainWindow::onSaveLog()
+{
+    QString filename = QFileDialog::getSaveFileName(this, "Save Log", "", "CSV Files (*.csv)");
+    if (filename.isEmpty()) return;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+
+    QTextStream out(&file);
+    out << "Timestamp,ID,DLC,Data\n";
+
+    for (int i = 0; i < messageModel->rowCount(); ++i) {
+        for (int j = 0; j < 4; ++j) {
+            out << messageModel->data(messageModel->index(i, j)).toString();
+            if (j < 3) out << ",";
+        }
+        out << "\n";
+    }
+}
+
+
+void MainWindow::onLoadLog()
+{
+    // Left as exercise - parse CSV and re-inject frames
+    QString filename = QFileDialog::getOpenFileName(this,"Select Log file","","CSV Files (*.csv)");
+    if (filename.isEmpty()) return;
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+
+    QTextStream in(&file);
+    QString line = in.readLine() ; // skip title line
+    int frameCount = 0;
+    while(!in.atEnd()){
+        line = in.readLine() ;
+
+        QStringList listFrame = line.split(u',', Qt::SkipEmptyParts);
+
+        bool ok;
+        QString idText = listFrame[1].remove("0x", Qt::CaseInsensitive);
+        quint32 id = idText.toUInt(&ok, 16);
+        if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
+            serverStatusLabel->setText("Error: Invalid CAN ID");
+            return;
+        }
+
+
+        quint8 dlc = listFrame[2].toUInt(&ok, 10);
+        if (!ok ) {
+            serverStatusLabel->setText("Error: Invalid DLC");
+            return;
+        }
+
+        // Validate and parse data bytes
+        QStringList dataList = listFrame[3].split(' ', Qt::SkipEmptyParts);
+        if (dataList.size() > 8) {
+            serverStatusLabel->setText("Error: Max 8 data bytes");
+            return;
+        }
+
+        quint8 data[8] = {0};
+        for (int i = 0; i < dataList.size(); ++i) {
+            quint32 byte = dataList[i].toUInt(&ok, 16);
+            if (!ok || byte > 0xFF) {
+                serverStatusLabel->setText("Error: Invalid data byte");
+                return;
+            }
+            data[i] = static_cast<quint8>(byte);
+        }
+
+        CANFrame frame(id, dlc, data);
+
+        messageModel->addFrame(frame);
+        frameCount++;
+    }
+
+    clientStatusLabel->setText("Log loaded");
+    clientStatusLabel->setText(QString("Loaded %1 frames").arg(frameCount));
+
+
 }

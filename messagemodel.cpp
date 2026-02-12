@@ -82,6 +82,7 @@ void MessageModel::addFrame(const CANFrame& frame)
     beginInsertRows(QModelIndex(), frames.size(), frames.size());
     frames.append(frame);
     endInsertRows();
+    emit frameAdded();
 }
 
 // Clear all frames
