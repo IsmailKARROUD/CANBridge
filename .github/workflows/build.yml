@@ -21,8 +21,19 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
       
+      - name: Gather dependencies
+        run: |
+          mkdir deploy
+          cp build/Release/CANBridge.exe deploy/
+          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Core.dll deploy/
+          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Widgets.dll deploy/
+          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Gui.dll deploy/
+          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Network.dll deploy/
+          mkdir deploy/platforms
+          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/plugins/platforms/qwindows.dll deploy/platforms/
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: CANBridge-Windows
-          path: build/Release/CANBridge.exe
+          path: deploy/
