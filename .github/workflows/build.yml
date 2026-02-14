@@ -1,0 +1,18 @@
+name: Build CANBridge
+on: [push]
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+      - name: Build
+        run: |
+          cmake -B build
+          cmake --build build --config Release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: CANBridge-Windows
+          path: build/Release/CANBridge.exe
