@@ -4,7 +4,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
       - name: Build
@@ -12,7 +12,7 @@ jobs:
           cmake -B build
           cmake --build build --config Release
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: CANBridge-Windows
           path: build/Release/CANBridge.exe
