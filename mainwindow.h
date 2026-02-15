@@ -86,6 +86,7 @@ private:
     QSpinBox* intervalSpin;
     QPushButton* sendPeriodicBtn;
     QPushButton* stopPeriodicBtn;
+    QLabel* lastFrameStatusLabel;
 
     // Analyzer tab widgets
     QTableView* messageTable;

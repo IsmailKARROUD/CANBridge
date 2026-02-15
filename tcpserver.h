@@ -21,6 +21,7 @@ public:
     void sendFrame(const CANFrame& frame);
     void addPeriodicFrame(const CANFrame& frame, int intervalMs);
     void clearPeriodicFrames();
+    bool isListening() const { return server->isListening(); }
 
 signals:
     void clientConnected(const QString& address);

@@ -41,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
     });
     connect(server, &TcpServer::frameSent, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
+        lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
     // ========== Client event connections ==========
@@ -215,6 +217,15 @@ void MainWindow::setupSimulatorTab()
     txGroup->setLayout(txLayout);
     mainLayout->addWidget(txGroup);
 
+    // Last frame status
+    QHBoxLayout* statusLayout = new QHBoxLayout();
+    statusLayout->addWidget(new QLabel("Last action:"));
+    lastFrameStatusLabel = new QLabel("No frames sent yet");
+    lastFrameStatusLabel->setStyleSheet("QLabel { color: gray; }");
+    statusLayout->addWidget(lastFrameStatusLabel);
+    statusLayout->addStretch();
+    mainLayout->addLayout(statusLayout);
+
     mainLayout->addStretch();
     tabWidget->addTab(simTab, "Simulator");
 
@@ -330,11 +341,19 @@ void MainWindow::onServerClientConnected(const QString& address)
 // ========== SIMULATOR HANDLERS ==========
 void MainWindow::onSendFrame()
 {
+    // Check if server is running
+    if (!server->isListening()) {
+        lastFrameStatusLabel->setText("✗ Error: Server not running");
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
+        return;
+    }
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
     if (!ok || id > 0x1FFFFFFF) {
         addLogEvent("Error: Invalid CAN ID", "Frame");
+        lastFrameStatusLabel->setText("✗ Error: Invalid CAN ID");
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
 
@@ -360,6 +379,12 @@ void MainWindow::onSendFrame()
 
 void MainWindow::onSendPeriodic()
 {
+    // Check if server is running
+    if (!server->isListening()) {
+        lastFrameStatusLabel->setText("✗ Error: Server not running");
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
+        return;
+    }
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
