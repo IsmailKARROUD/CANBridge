@@ -17,7 +17,23 @@ TcpServer::TcpServer(QObject *parent) : QObject(parent) , server(new QTcpServer(
 // Destructor: Clean up resources
 TcpServer::~TcpServer()
 {
-    stopServer();
+    // Disconnect signals to prevent callbacks during destruction
+    server->disconnect();
+
+    // Stop periodic timer
+    periodicTimer->stop();
+
+    // Disconnect all clients without emitting signals
+    for (auto* client : clients) {
+        client->disconnect();  // Disconnect client's signals
+        client->disconnectFromHost();
+        client->deleteLater();
+    }
+    clients.clear();
+    clientBuffers.clear();
+
+    // Close server
+    server->close();
 }
 
 // Start listening on specified port

@@ -13,6 +13,10 @@ TcpClient::TcpClient(QObject *parent) : QObject(parent) , socket(new QTcpSocket(
 // Destructor: Clean up socket
 TcpClient::~TcpClient()
 {
+    // Disconnect all signals to prevent callbacks during destruction
+    socket->disconnect();
+
+    // Now safe to disconnect from server
     disconnectFromServer();
 }
 
