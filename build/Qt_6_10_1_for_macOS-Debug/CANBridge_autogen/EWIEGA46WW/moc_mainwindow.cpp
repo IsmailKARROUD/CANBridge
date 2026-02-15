@@ -43,18 +43,20 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "onStartServer",
         "",
         "onStopServer",
+        "onConnect",
+        "onDisconnect",
         "onSendFrame",
         "onSendPeriodic",
         "onStopPeriodic",
-        "onConnect",
-        "onDisconnect",
         "onClearMessages",
+        "onSaveFrames",
+        "onLoadFrames",
+        "onLogFilterChanged",
+        "index",
         "onServerClientConnected",
         "address",
         "onClientConnected",
-        "onClientDisconnected",
-        "onSaveLog",
-        "onLoadLog"
+        "onClientDisconnected"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -62,30 +64,34 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void()>(1, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onStopServer'
         QtMocHelpers::SlotData<void()>(3, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onSendFrame'
-        QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onSendPeriodic'
-        QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onStopPeriodic'
-        QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onConnect'
-        QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(4, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onDisconnect'
+        QtMocHelpers::SlotData<void()>(5, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onSendFrame'
+        QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onSendPeriodic'
+        QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onStopPeriodic'
         QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onClearMessages'
         QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onSaveFrames'
+        QtMocHelpers::SlotData<void()>(10, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onLoadFrames'
+        QtMocHelpers::SlotData<void()>(11, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'onLogFilterChanged'
+        QtMocHelpers::SlotData<void(int)>(12, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 13 },
+        }}),
         // Slot 'onServerClientConnected'
-        QtMocHelpers::SlotData<void(const QString &)>(10, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::QString, 11 },
+        QtMocHelpers::SlotData<void(const QString &)>(14, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 15 },
         }}),
         // Slot 'onClientConnected'
-        QtMocHelpers::SlotData<void()>(12, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onClientDisconnected'
-        QtMocHelpers::SlotData<void()>(13, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onSaveLog'
-        QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'onLoadLog'
-        QtMocHelpers::SlotData<void()>(15, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -111,17 +117,18 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->onStartServer(); break;
         case 1: _t->onStopServer(); break;
-        case 2: _t->onSendFrame(); break;
-        case 3: _t->onSendPeriodic(); break;
-        case 4: _t->onStopPeriodic(); break;
-        case 5: _t->onConnect(); break;
-        case 6: _t->onDisconnect(); break;
+        case 2: _t->onConnect(); break;
+        case 3: _t->onDisconnect(); break;
+        case 4: _t->onSendFrame(); break;
+        case 5: _t->onSendPeriodic(); break;
+        case 6: _t->onStopPeriodic(); break;
         case 7: _t->onClearMessages(); break;
-        case 8: _t->onServerClientConnected((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
-        case 9: _t->onClientConnected(); break;
-        case 10: _t->onClientDisconnected(); break;
-        case 11: _t->onSaveLog(); break;
-        case 12: _t->onLoadLog(); break;
+        case 8: _t->onSaveFrames(); break;
+        case 9: _t->onLoadFrames(); break;
+        case 10: _t->onLogFilterChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
+        case 11: _t->onServerClientConnected((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
+        case 12: _t->onClientConnected(); break;
+        case 13: _t->onClientDisconnected(); break;
         default: ;
         }
     }
@@ -146,14 +153,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 13)
+        if (_id < 14)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 13;
+        _id -= 14;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 13)
+        if (_id < 14)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 13;
+        _id -= 14;
     }
     return _id;
 }

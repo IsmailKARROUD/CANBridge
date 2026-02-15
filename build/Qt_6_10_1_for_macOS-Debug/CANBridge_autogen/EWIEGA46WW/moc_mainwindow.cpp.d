@@ -889,6 +889,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetwork-config.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkexports.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/Headers/qtnetworkglobal.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QComboBox \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLabel \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QLineEdit \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QMainWindow \
@@ -903,6 +904,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractscrollarea.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractslider.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractspinbox.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qcombobox.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qframe.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlabel.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qlineedit.h \

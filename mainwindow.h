@@ -9,7 +9,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QTextEdit>
-
+#include <QComboBox>
 #include "tcpserver.h"
 #include "tcpclient.h"
 #include "messagemodel.h"
@@ -23,39 +23,62 @@ public:
     ~MainWindow();
 
 private slots:
-    // Simulator slots
+    // Connection tab - Server
     void onStartServer();
     void onStopServer();
+
+    // Connection tab - Client
+    void onConnect();
+    void onDisconnect();
+
+    // Simulator tab
     void onSendFrame();
     void onSendPeriodic();
     void onStopPeriodic();
 
-    // Analyzer slots
-    void onConnect();
-    void onDisconnect();
+    // Analyzer tab
     void onClearMessages();
+    void onSaveFrames();
+    void onLoadFrames();
+
+    // Log tab
+    void onLogFilterChanged(int index);
 
     // Status updates
     void onServerClientConnected(const QString& address);
     void onClientConnected();
     void onClientDisconnected();
 
-    // logs
-    void onSaveLog();
-    void onLoadLog();
-
 private:
+    void setupConnectionTab();
+    void setupLogTab();
     void setupSimulatorTab();
     void setupAnalyzerTab();
-    void addServerEvent(const QString& message);
+
+    void addLogEvent(const QString& message, const QString& category);
+    void updateLogDisplay();
 
     // Tabs
     QTabWidget* tabWidget;
 
-    // Simulator widgets
+    // Connection tab - Server widgets
     QSpinBox* serverPortSpin;
     QPushButton* startServerBtn;
     QPushButton* stopServerBtn;
+    QLabel* serverStatusIndicator;
+
+    // Connection tab - Client widgets
+    QLineEdit* hostEdit;
+    QSpinBox* clientPortSpin;
+    QPushButton* connectBtn;
+    QPushButton* disconnectBtn;
+    QLabel* clientStatusIndicator;
+
+    // Log tab widgets
+    QComboBox* logFilterCombo;
+    QTextEdit* logDisplay;
+
+    // Simulator tab widgets
     QLineEdit* canIdEdit;
     QSpinBox* dlcSpin;
     QLineEdit* dataEdit;
@@ -63,16 +86,12 @@ private:
     QSpinBox* intervalSpin;
     QPushButton* sendPeriodicBtn;
     QPushButton* stopPeriodicBtn;
-    QLabel* serverStatusLabel;
 
-    // Analyzer widgets
-    QLineEdit* hostEdit;
-    QSpinBox* clientPortSpin;
-    QPushButton* connectBtn;
-    QPushButton* disconnectBtn;
+    // Analyzer tab widgets
     QTableView* messageTable;
     QPushButton* clearBtn;
-    QLabel* clientStatusLabel;
+    QPushButton* saveFramesBtn;
+    QPushButton* loadFramesBtn;
     QLabel* messageCountLabel;
 
     // Backend
@@ -80,13 +99,14 @@ private:
     TcpClient* client;
     MessageModel* messageModel;
 
-    //Logs
-    QPushButton* saveLogBtn;
-    QPushButton* loadLogBtn;
-
-    QLabel* serverStatusIndicator;
-    QTextEdit* serverEventLog;
-    QStringList eventLogHistory;  // Keep last 5 events
+    // Log management
+    struct LogEntry {
+        QString timestamp;
+        QString category;  // "Server", "Client", "Frame"
+        QString message;
+    };
+    QList<LogEntry> logHistory;
+    QString currentLogFilter;  // "All", "Server", "Client", "Frame"
 };
 
 #endif // MAINWINDOW_H
