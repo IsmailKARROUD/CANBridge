@@ -98,9 +98,15 @@ bool TcpClient::parseFrame()
 
 void TcpClient::sendFrame(const CANFrame& frame)
 {
-    if (socket->state() == QAbstractSocket::ConnectedState) {
-        QByteArray data = frame.serialize();
-        socket->write(data);
-        socket->flush();
+    if (socket->state() != QAbstractSocket::ConnectedState) {
+        emit errorOccurred("Client is not connected - connect to server first");
+        return;
     }
+
+    QByteArray data = frame.serialize();
+    socket->write(data);
+    socket->flush();
+
+    emit frameSent(frame);  // Only emit if successfully sent
 }
+

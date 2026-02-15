@@ -45,6 +45,12 @@ MainWindow::MainWindow(QWidget *parent)
         lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
+    connect(server, &TcpServer::frameReceived, messageModel, &MessageModel::addFrame);
+    connect(server, &TcpServer::frameReceived, this, [this](const CANFrame& frame) {
+        addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
+    });
+
+
     // ========== Client event connections ==========
     connect(client, &TcpClient::connected, this, &MainWindow::onClientConnected);
     connect(client, &TcpClient::disconnected, this, &MainWindow::onClientDisconnected);
@@ -57,6 +63,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(client, &TcpClient::frameReceived, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
+    connect(client, &TcpClient::frameSent, this, [this](const CANFrame& frame) {
+        addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
+        lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
+    });
+
 
     // ========== UI updates ==========
     connect(messageModel, &MessageModel::frameAdded, this, [this]() {
@@ -342,8 +354,8 @@ void MainWindow::onServerClientConnected(const QString& address)
 void MainWindow::onSendFrame()
 {
     // Check if server is running
-    if (!server->isListening()) {
-        lastFrameStatusLabel->setText("✗ Error: Server not running");
+    if (!server->isListening() && !client->isConnected()) {
+        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
@@ -374,14 +386,19 @@ void MainWindow::onSendFrame()
     }
 
     CANFrame frame(id, dlcSpin->value(), data);
-    server->sendFrame(frame);
+    if(server->isListening()) {server->sendFrame(frame);}
+    else if(client->isConnected()) {client->sendFrame(frame);}
+    else{
+        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
+    }
 }
 
 void MainWindow::onSendPeriodic()
 {
     // Check if server is running
-    if (!server->isListening()) {
-        lastFrameStatusLabel->setText("✗ Error: Server not running");
+    if (!server->isListening() && !client->isConnected()) {
+        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
@@ -410,7 +427,15 @@ void MainWindow::onSendPeriodic()
     }
 
     CANFrame frame(id, dlcSpin->value(), data);
-    server->addPeriodicFrame(frame, intervalSpin->value());
+
+    if (server->isListening()) {
+        server->addPeriodicFrame(frame, intervalSpin->value());
+    } else if (client->isConnected()) {
+        client->sendFrame(frame); // Note: Client doesn't have periodic yet
+    } else{
+        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
+        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
+    }
 
     sendPeriodicBtn->setEnabled(false);
     stopPeriodicBtn->setEnabled(true);

@@ -23,6 +23,7 @@ signals:
     void disconnected();
     void frameReceived(const CANFrame& frame);
     void errorOccurred(const QString& error);
+    void frameSent(const CANFrame& frame);
 
 private slots:
     void onConnected();
