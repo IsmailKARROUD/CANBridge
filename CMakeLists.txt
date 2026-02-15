@@ -16,6 +16,9 @@ qt_add_executable(CANBridge
     tcpserver.cpp
     messagemodel.h
     messagemodel.cpp
+    aboutdialog.h
+    aboutdialog.cpp
+
 
     mainwindow.ui
     tcpclient.h tcpclient.cpp
@@ -45,3 +48,18 @@ install(SCRIPT ${deploy_script})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
+project(CANBridge
+    VERSION 0.1.0
+    LANGUAGES CXX
+)
+
+# Configure a header file to pass version to source code
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.h"
+)
+
+# Make sure the generated header is in include path
+include_directories("${CMAKE_CURRENT_BINARY_DIR}")

@@ -1,4 +1,3 @@
-#include "mainwindow.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -7,6 +6,12 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QTextStream>
+#include <QMenuBar>
+#include <QActionGroup>
+#include <QApplication>
+
+#include "mainwindow.h"
+#include "aboutdialog.h"
 
 // Constructor: Initialize main window and all components
 MainWindow::MainWindow(QWidget *parent)
@@ -28,6 +33,10 @@ MainWindow::MainWindow(QWidget *parent)
     setupLogTab();
     setupSimulatorTab();
     setupAnalyzerTab();
+
+    //Theme
+    isDarkMode = false;
+    setupMenuBar();
 
     // ========== Server event connections ==========
     connect(server, &TcpServer::clientConnected, this, &MainWindow::onServerClientConnected);
@@ -78,6 +87,148 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+}
+
+// ========== MENU BAR SETUP ==========
+void MainWindow::setupMenuBar()
+{
+    QMenuBar* menuBar = new QMenuBar(this);
+    setMenuBar(menuBar);
+
+    // CANBridge menu
+    QMenu* appMenu = menuBar->addMenu("CANBridge");
+
+    QAction* aboutAction = appMenu->addAction("About CANBridge");
+    connect(aboutAction, &QAction::triggered, this, [this]() {
+        AboutDialog dialog(this);
+        dialog.exec();
+    });
+
+    appMenu->addSeparator();
+
+    QAction* quitAction = appMenu->addAction("Quit");
+    quitAction->setShortcut(QKeySequence::Quit);
+    connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
+
+    // View menu
+    QMenu* viewMenu = menuBar->addMenu("View");
+
+    // Theme submenu
+    QMenu* themeMenu = viewMenu->addMenu("Theme");
+    QActionGroup* themeGroup = new QActionGroup(this);
+
+    QAction* autoThemeAction = themeMenu->addAction("Auto (System)");
+    autoThemeAction->setCheckable(true);
+    autoThemeAction->setChecked(true);
+    themeGroup->addAction(autoThemeAction);
+
+    QAction* lightThemeAction = themeMenu->addAction("Light");
+    lightThemeAction->setCheckable(true);
+    themeGroup->addAction(lightThemeAction);
+
+    darkModeAction = themeMenu->addAction("Dark");
+    darkModeAction->setCheckable(true);
+    themeGroup->addAction(darkModeAction);
+
+    connect(autoThemeAction, &QAction::triggered, this, [this]() {
+        // Detect system theme (simplified - would need platform-specific code)
+        applyTheme(false); // Default to light for now
+    });
+
+    connect(lightThemeAction, &QAction::triggered, this, [this]() {
+        applyTheme(false);
+    });
+
+    connect(darkModeAction, &QAction::triggered, this, [this]() {
+        applyTheme(true);
+    });
+}
+
+void MainWindow::applyTheme(bool isDark)
+{
+    isDarkMode = isDark;
+
+    if (isDark) {
+        // Dark theme stylesheet
+        qApp->setStyleSheet(R"(
+            QMainWindow, QWidget {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            QGroupBox {
+                border: 1px solid #555555;
+                border-radius: 5px;
+                margin-top: 10px;
+                font-weight: bold;
+                color: #ffffff;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+            }
+            QLineEdit, QSpinBox, QTextEdit {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 3px;
+                padding: 5px;
+            }
+            QPushButton {
+                background-color: #4a4a4a;
+                color: #ffffff;
+                border: 1px solid #666666;
+                border-radius: 5px;
+                padding: 5px 15px;
+            }
+            QPushButton:hover {
+                background-color: #5a5a5a;
+            }
+            QPushButton:pressed {
+                background-color: #3a3a3a;
+            }
+            QPushButton:disabled {
+                background-color: #2b2b2b;
+                color: #666666;
+            }
+            QTableView {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                gridline-color: #555555;
+            }
+            QHeaderView::section {
+                background-color: #4a4a4a;
+                color: #ffffff;
+                border: 1px solid #555555;
+                padding: 5px;
+            }
+            QTabWidget::pane {
+                border: 1px solid #555555;
+            }
+            QTabBar::tab {
+                background-color: #4a4a4a;
+                color: #ffffff;
+                border: 1px solid #555555;
+                padding: 8px 16px;
+            }
+            QTabBar::tab:selected {
+                background-color: #2b2b2b;
+            }
+            QComboBox {
+                background-color: #3c3c3c;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 3px;
+                padding: 5px;
+            }
+            QComboBox::drop-down {
+                border: none;
+            }
+        )");
+    } else {
+        // Light theme (default Qt styling)
+        qApp->setStyleSheet("");
+    }
 }
 
 // ========== TAB 1: CONNECTION ==========

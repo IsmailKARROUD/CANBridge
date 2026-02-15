@@ -376,6 +376,8 @@
 		"/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6/Qt6Dependencies.cmake",
 		"/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/GNUInstallDirs.cmake",
 		"/Users/ismac/Qt/Tools/CMake/CMake.app/Contents/share/cmake-3.30/Modules/GNUInstallDirs.cmake",
+		"/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/.qtc/package-manager/auto-setup.cmake",
+		"/Users/ismac/project/QtProjects/CANBridge/src/version.h.in",
 		"/Users/ismac/Qt/6.10.1/macos/lib/cmake/Qt6/macos/Info.plist.app.in"
 	],
 	"CMAKE_SOURCE_DIR" : "/Users/ismac/project/QtProjects/CANBridge",
@@ -384,6 +386,12 @@
 	"DEP_FILE_RULE_NAME" : "CANBridge_autogen/timestamp",
 	"HEADERS" : 
 	[
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/aboutdialog.h",
+			"MU",
+			"EWIEGA46WW/moc_aboutdialog.cpp",
+			null
+		],
 		[
 			"/Users/ismac/project/QtProjects/CANBridge/canframe.h",
 			"MU",
@@ -428,6 +436,7 @@
 	],
 	"MOC_INCLUDES" : 
 	[
+		"/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug",
 		"/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Headers",
 		"/Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework",
 		"/Users/ismac/Qt/6.10.1/macos/mkspecs/macx-clang",
@@ -475,6 +484,11 @@
 	"SETTINGS_FILE" : "/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CMakeFiles/CANBridge_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/aboutdialog.cpp",
+			"MU",
+			null
+		],
 		[ "/Users/ismac/project/QtProjects/CANBridge/canframe.cpp", "MU", null ],
 		[ "/Users/ismac/project/QtProjects/CANBridge/main.cpp", "MU", null ],
 		[

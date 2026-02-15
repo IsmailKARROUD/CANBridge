@@ -49,6 +49,7 @@ private slots:
     void onClientConnected();
     void onClientDisconnected();
 
+
 private:
     void setupConnectionTab();
     void setupLogTab();
@@ -57,6 +58,10 @@ private:
 
     void addLogEvent(const QString& message, const QString& category);
     void updateLogDisplay();
+
+    //Theme
+    void setupMenuBar();
+    void applyTheme(bool isDark);
 
     // Tabs
     QTabWidget* tabWidget;
@@ -108,6 +113,10 @@ private:
     };
     QList<LogEntry> logHistory;
     QString currentLogFilter;  // "All", "Server", "Client", "Frame"
+
+    //Theme
+    QAction* darkModeAction;
+    bool isDarkMode;
 };
 
 #endif // MAINWINDOW_H
