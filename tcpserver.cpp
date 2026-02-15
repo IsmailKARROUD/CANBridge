@@ -48,6 +48,12 @@ void TcpServer::stopServer()
 // Send a single CAN frame to all connected clients
 void TcpServer::sendFrame(const CANFrame& frame)
 {
+    // Don't send if server not running
+    if (!server->isListening()) {
+        emit errorOccurred("Server not running - start server first");
+        return;
+    }
+
     QByteArray data = frame.serialize();  // Convert to network format
 
     // Broadcast to all connected clients

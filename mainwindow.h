@@ -8,6 +8,8 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QTextEdit>
+
 #include "tcpserver.h"
 #include "tcpclient.h"
 #include "messagemodel.h"
@@ -45,6 +47,7 @@ private slots:
 private:
     void setupSimulatorTab();
     void setupAnalyzerTab();
+    void addServerEvent(const QString& message);
 
     // Tabs
     QTabWidget* tabWidget;
@@ -80,6 +83,10 @@ private:
     //Logs
     QPushButton* saveLogBtn;
     QPushButton* loadLogBtn;
+
+    QLabel* serverStatusIndicator;
+    QTextEdit* serverEventLog;
+    QStringList eventLogHistory;  // Keep last 5 events
 };
 
 #endif // MAINWINDOW_H

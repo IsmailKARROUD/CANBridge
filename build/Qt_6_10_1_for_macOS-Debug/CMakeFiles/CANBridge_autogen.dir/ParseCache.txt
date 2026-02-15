@@ -3424,6 +3424,7 @@
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QSpinBox
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTabWidget
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTableView
+ mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTextEdit
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractbutton.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemdelegate.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemview.h
@@ -3444,6 +3445,7 @@
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabbar.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtableview.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabwidget.h
+ mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtextedit.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgets-config.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsexports.h
  mdp:/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsglobal.h

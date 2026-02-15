@@ -895,6 +895,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QSpinBox \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTabWidget \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTableView \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/QTextEdit \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractbutton.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemdelegate.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qabstractitemview.h \
@@ -915,6 +916,7 @@ CANBridge_autogen/timestamp: \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabbar.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtableview.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtabwidget.h \
+	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtextedit.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgets-config.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsexports.h \
 	/Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsglobal.h \

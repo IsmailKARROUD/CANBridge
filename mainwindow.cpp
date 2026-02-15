@@ -24,12 +24,17 @@ MainWindow::MainWindow(QWidget *parent)
     setupSimulatorTab();
     setupAnalyzerTab();
 
-    // Connect backend signals to UI slots
+    // Connect server client events to UI handlers
     connect(server, &TcpServer::clientConnected, this, &MainWindow::onServerClientConnected);
+    connect(server, &TcpServer::clientDisconnected, this, [this](const QString& address) {
+        addServerEvent(QString("Client disconnected: %1").arg(address));
+    });
+
+    // Connect client connection events
     connect(client, &TcpClient::connected, this, &MainWindow::onClientConnected);
     connect(client, &TcpClient::disconnected, this, &MainWindow::onClientDisconnected);
 
-    // Update message counter when frames added
+    // Update message counter when frames added to model
     connect(messageModel, &MessageModel::frameAdded, this, [this]() {
         messageCountLabel->setText(QString("Messages: %1").arg(messageModel->rowCount()));
     });
@@ -37,13 +42,21 @@ MainWindow::MainWindow(QWidget *parent)
     // Auto-update table when frames arrive from network
     connect(client, &TcpClient::frameReceived, messageModel, &MessageModel::addFrame);
 
-    // Handle errors
+    // Handle server errors (status indicator + event log)
     connect(server, &TcpServer::errorOccurred, this, [this](const QString& error) {
-        serverStatusLabel->setText("Error: " + error);
+        serverStatusIndicator->setText("● Error");
+        serverStatusIndicator->setStyleSheet("QLabel { color: red; font-weight: bold; }");
+        addServerEvent("Error: " + error);
     });
 
+    // Handle client errors (status label only)
     connect(client, &TcpClient::errorOccurred, this, [this](const QString& error) {
         clientStatusLabel->setText("Error: " + error);
+    });
+
+    // Update event log when frames sent
+    connect(server, &TcpServer::frameSent, this, [this](const CANFrame& frame) {
+        addServerEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16));
     });
 }
 
@@ -59,29 +72,46 @@ void MainWindow::setupSimulatorTab()
 
     // ========== Server Control Section ==========
     QGroupBox* serverGroup = new QGroupBox("Server Control");
-    QHBoxLayout* serverLayout = new QHBoxLayout();
+    QVBoxLayout* serverGroupLayout = new QVBoxLayout();
+
+    // Line 1: Port, Status Indicator, Buttons
+    QHBoxLayout* controlLayout = new QHBoxLayout();
+    controlLayout->addWidget(new QLabel("Port:"));
 
     // Port configuration
-    serverLayout->addWidget(new QLabel("Port:"));
     serverPortSpin = new QSpinBox();
     serverPortSpin->setRange(1024, 65535);  // Valid TCP port range
     serverPortSpin->setValue(5555);         // Default CAN gateway port
-    serverLayout->addWidget(serverPortSpin);
+    controlLayout->addWidget(serverPortSpin);
+
+    // Status indicator with colored circle
+    serverStatusIndicator = new QLabel("● Stopped");
+    serverStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
+    QFont indicatorFont = serverStatusIndicator->font();
+    indicatorFont.setPointSize(12);
+    serverStatusIndicator->setFont(indicatorFont);
+    controlLayout->addWidget(serverStatusIndicator);
 
     // Start/Stop buttons
-    startServerBtn = new QPushButton("Start Server");
-    stopServerBtn = new QPushButton("Stop Server");
+    startServerBtn = new QPushButton("Start");
+    stopServerBtn = new QPushButton("Stop");
     stopServerBtn->setEnabled(false);  // Disabled until server started
-    serverLayout->addWidget(startServerBtn);
-    serverLayout->addWidget(stopServerBtn);
+    controlLayout->addWidget(startServerBtn);
+    controlLayout->addWidget(stopServerBtn);
+    controlLayout->addStretch();
 
-    // Status indicator
-    serverStatusLabel = new QLabel("Server: Stopped");
-    serverLayout->addWidget(serverStatusLabel);
-    serverLayout->addStretch();
+    serverGroupLayout->addLayout(controlLayout);
 
-    serverGroup->setLayout(serverLayout);
+    // Line 2: Event log (last 5 events)
+    serverEventLog = new QTextEdit();
+    serverEventLog->setReadOnly(true);
+    serverEventLog->setMaximumHeight(80);  // ~3-4 lines visible
+    serverEventLog->setPlaceholderText("Server events will appear here...");
+    serverGroupLayout->addWidget(serverEventLog);
+
+    serverGroup->setLayout(serverGroupLayout);
     mainLayout->addWidget(serverGroup);
+
 
     // ========== Message Configuration Section ==========
     QGroupBox* msgGroup = new QGroupBox("Message Configuration");
@@ -144,6 +174,7 @@ void MainWindow::setupSimulatorTab()
     connect(canIdEdit, &QLineEdit::textChanged, [this]() {
         canIdEdit->setStyleSheet("");  // Clear error styling
     });
+
 }
 
 // Build Analyzer tab UI (client/receiver side)
@@ -226,12 +257,19 @@ void MainWindow::setupAnalyzerTab()
 // Start TCP server on configured port
 void MainWindow::onStartServer()
 {
+        // Update UI
     if (server->startServer(serverPortSpin->value())) {
-        // Update UI to reflect running state
-        serverStatusLabel->setText("Server: Running");
+        serverStatusIndicator->setText("● Running");
+        serverStatusIndicator->setStyleSheet("QLabel { color: green; font-weight: bold; }");
         startServerBtn->setEnabled(false);
         stopServerBtn->setEnabled(true);
-        serverPortSpin->setEnabled(false);  // Lock port while running
+        serverPortSpin->setEnabled(false); // Lock port while running
+
+        addServerEvent(QString("Server started on port %1").arg(serverPortSpin->value()));
+    } else {
+        serverStatusIndicator->setText("● Error");
+        serverStatusIndicator->setStyleSheet("QLabel { color: red; font-weight: bold; }");
+        addServerEvent("Failed to start server - port may be in use");
     }
 }
 
@@ -239,10 +277,13 @@ void MainWindow::onStartServer()
 void MainWindow::onStopServer()
 {
     server->stopServer();
-    serverStatusLabel->setText("Server: Stopped");
+    serverStatusIndicator->setText("● Stopped");
+    serverStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
     startServerBtn->setEnabled(true);
     stopServerBtn->setEnabled(false);
     serverPortSpin->setEnabled(true);
+
+    addServerEvent("Server stopped");
 }
 
 // Send a single CAN frame immediately
@@ -253,14 +294,14 @@ void MainWindow::onSendFrame()
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
     if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
-        serverStatusLabel->setText("Error: Invalid CAN ID");
+        addServerEvent("Error: Invalid CAN ID");
         return;
     }
 
     // Validate and parse data bytes
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
     if (dataList.size() > 8) {
-        serverStatusLabel->setText("Error: Max 8 data bytes");
+        addServerEvent("Error: Max 8 data bytes");
         return;
     }
 
@@ -268,7 +309,7 @@ void MainWindow::onSendFrame()
     for (int i = 0; i < dataList.size(); ++i) {
         quint32 byte = dataList[i].toUInt(&ok, 16);
         if (!ok || byte > 0xFF) {
-            serverStatusLabel->setText("Error: Invalid data byte");
+            addServerEvent("Error: Invalid data byte");
             return;
         }
         data[i] = static_cast<quint8>(byte);
@@ -276,7 +317,6 @@ void MainWindow::onSendFrame()
 
     CANFrame frame(id, dlcSpin->value(), data);
     server->sendFrame(frame);
-    serverStatusLabel->setText("Frame sent");
 }
 
 // Start periodic transmission of configured frame
@@ -287,14 +327,14 @@ void MainWindow::onSendPeriodic()
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
     if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
-        serverStatusLabel->setText("Error: Invalid CAN ID");
+        addServerEvent("Error: Invalid CAN ID");
         return;
     }
 
     // Validate and parse data bytes
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
     if (dataList.size() > 8) {
-        serverStatusLabel->setText("Error: Max 8 data bytes");
+        addServerEvent("Error: Max 8 data bytes");
         return;
     }
 
@@ -302,7 +342,7 @@ void MainWindow::onSendPeriodic()
     for (int i = 0; i < dataList.size(); ++i) {
         quint32 byte = dataList[i].toUInt(&ok, 16);
         if (!ok || byte > 0xFF) {
-            serverStatusLabel->setText("Error: Invalid data byte");
+            addServerEvent("Error: Invalid data byte");
             return;
         }
         data[i] = static_cast<quint8>(byte);
@@ -351,7 +391,7 @@ void MainWindow::onClearMessages()
 // Update status when client connects to our server
 void MainWindow::onServerClientConnected(const QString& address)
 {
-    serverStatusLabel->setText(QString("Server: Client %1 connected").arg(address));
+    addServerEvent(QString("Client connected: %1").arg(address));
 }
 
 // Update UI when analyzer connects successfully
@@ -420,21 +460,21 @@ void MainWindow::onLoadLog()
         QString idText = listFrame[1].remove("0x", Qt::CaseInsensitive);
         quint32 id = idText.toUInt(&ok, 16);
         if (!ok || id > 0x1FFFFFFF) {  // Max 29-bit extended CAN ID
-            serverStatusLabel->setText("Error: Invalid CAN ID");
+            addServerEvent("Error: Invalid CAN ID");
             return;
         }
 
 
         quint8 dlc = listFrame[2].toUInt(&ok, 10);
         if (!ok ) {
-            serverStatusLabel->setText("Error: Invalid DLC");
+            addServerEvent("Error: Invalid DLC");
             return;
         }
 
         // Validate and parse data bytes
         QStringList dataList = listFrame[3].split(' ', Qt::SkipEmptyParts);
         if (dataList.size() > 8) {
-            serverStatusLabel->setText("Error: Max 8 data bytes");
+            addServerEvent("Error: Max 8 data bytes");
             return;
         }
 
@@ -442,7 +482,7 @@ void MainWindow::onLoadLog()
         for (int i = 0; i < dataList.size(); ++i) {
             quint32 byte = dataList[i].toUInt(&ok, 16);
             if (!ok || byte > 0xFF) {
-                serverStatusLabel->setText("Error: Invalid data byte");
+                addServerEvent("Error: Invalid data byte");
                 return;
             }
             data[i] = static_cast<quint8>(byte);
@@ -458,4 +498,18 @@ void MainWindow::onLoadLog()
     clientStatusLabel->setText(QString("Loaded %1 frames").arg(frameCount));
 
 
+}
+
+void MainWindow::addServerEvent(const QString& message)
+{
+    QString timestamp = QDateTime::currentDateTime().toString("hh:mm:ss");
+    QString logEntry = QString("[%1] %2").arg(timestamp, message);
+
+    // Keep only last 5 events
+    eventLogHistory.prepend(logEntry);
+    if (eventLogHistory.size() > 5) {
+        eventLogHistory.removeLast();
+    }
+
+    serverEventLog->setText(eventLogHistory.join("\n"));
 }
