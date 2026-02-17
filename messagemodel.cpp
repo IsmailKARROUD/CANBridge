@@ -90,9 +90,10 @@ QVariant MessageModel::headerData(int section, Qt::Orientation orientation, int 
     if (orientation == Qt::Horizontal) {
         switch (section) {
         case 0: return "Timestamp";
-        case 1: return "ID";
-        case 2: return "DLC";
-        case 3: return "Data";
+        case 1: return "Dir";
+        case 2: return "ID";
+        case 3: return "DLC";
+        case 4: return "Data";
         }
     }
 
