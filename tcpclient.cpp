@@ -1,32 +1,57 @@
+/**
+ * @file tcpclient.cpp
+ * @brief Implementation of the TcpClient class.
+ *
+ * Handles TCP connection lifecycle, frame transmission to the server,
+ * and reception/parsing of incoming CAN frames from the server.
+ */
+
 #include "tcpclient.h"
 
-// Constructor: Initialize TCP socket
-TcpClient::TcpClient(QObject *parent) : QObject(parent) , socket(new QTcpSocket(this))
+// ============================================================================
+// Constructor / Destructor
+// ============================================================================
+
+/**
+ * Initialize the TCP socket and connect all Qt signal/slot pairs
+ * for connection, disconnection, data arrival, and error handling.
+ */
+TcpClient::TcpClient(QObject *parent)
+    : QObject(parent)
+    , socket(new QTcpSocket(this))
 {
-    // Connect socket signals to handlers
     connect(socket, &QTcpSocket::connected, this, &TcpClient::onConnected);
     connect(socket, &QTcpSocket::disconnected, this, &TcpClient::onDisconnected);
     connect(socket, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
     connect(socket, &QTcpSocket::errorOccurred, this, &TcpClient::onError);
 }
 
-// Destructor: Clean up socket
+/**
+ * Destructor: disconnect all signals first to prevent callbacks during
+ * destruction, then close the connection.
+ */
 TcpClient::~TcpClient()
 {
-    // Disconnect all signals to prevent callbacks during destruction
     socket->disconnect();
-
-    // Now safe to disconnect from server
     disconnectFromServer();
 }
 
-// Initiate connection to server
+// ============================================================================
+// Connection Management
+// ============================================================================
+
+/**
+ * Initiate an asynchronous TCP connection to the given host and port.
+ * The connected() signal will be emitted when the connection succeeds.
+ */
 void TcpClient::connectToServer(const QString& host, quint16 port)
 {
     socket->connectToHost(host, port);
 }
 
-// Disconnect from server
+/**
+ * Disconnect from the server if currently in the connected state.
+ */
 void TcpClient::disconnectFromServer()
 {
     if (socket->state() == QAbstractSocket::ConnectedState) {
@@ -34,72 +59,102 @@ void TcpClient::disconnectFromServer()
     }
 }
 
-// Check if currently connected
+/**
+ * @return true if the socket is currently in the ConnectedState.
+ */
 bool TcpClient::isConnected() const
 {
     return socket->state() == QAbstractSocket::ConnectedState;
 }
 
-// Handle successful connection
+// ============================================================================
+// Connection Event Handlers
+// ============================================================================
+
+/**
+ * Called when the TCP connection is established.
+ * Clears any residual data in the receive buffer.
+ */
 void TcpClient::onConnected()
 {
-    buffer.clear();  // Clear any residual data
+    buffer.clear();
     emit connected();
 }
 
-// Handle disconnection
+/**
+ * Called when the TCP connection is closed.
+ * Clears the receive buffer.
+ */
 void TcpClient::onDisconnected()
 {
     buffer.clear();
     emit disconnected();
 }
 
-// Handle incoming data from server
+/**
+ * Called when new data arrives from the server.
+ * Appends incoming bytes to the buffer and attempts to extract
+ * complete CAN frames in a loop until no more full frames remain.
+ */
 void TcpClient::onReadyRead()
 {
-    // Append new data to buffer
     buffer.append(socket->readAll());
 
-    // Try to parse complete frames from buffer
+    // Extract all complete frames from the buffer
     while (parseFrame()) {
-        // parseFrame() emits frameReceived and removes parsed data
+        // parseFrame() emits frameReceived() for each complete frame
     }
 }
 
-// Handle socket errors
+/**
+ * Called on socket errors (connection refused, host not found, etc.).
+ * Forwards the human-readable error string via errorOccurred().
+ */
 void TcpClient::onError(QAbstractSocket::SocketError socketError)
 {
     Q_UNUSED(socketError);
     emit errorOccurred(socket->errorString());
 }
 
-// Extract and parse a complete CANFrame from buffer
+// ============================================================================
+// Frame Parsing
+// ============================================================================
+
+/**
+ * Attempt to extract a single 21-byte CAN frame from the receive buffer.
+ *
+ * Frame size breakdown:
+ *   4 bytes (ID) + 1 byte (DLC) + 8 bytes (data) + 8 bytes (timestamp) = 21 bytes
+ *
+ * @return true if a complete frame was parsed and emitted, false if
+ *         the buffer does not yet contain a full frame.
+ */
 bool TcpClient::parseFrame()
 {
-    // Expected frame size in bytes
-    // CANFrame: 4 (id) + 1 (dlc) + 8 (data) + 8 (timestamp) = 21 bytes
     const int frameSize = 21;
 
-    // Not enough data yet for a complete frame
     if (buffer.size() < frameSize) {
-        return false;
+        return false;  // Not enough data for a complete frame
     }
 
-    // Extract exactly one frame's worth of data
+    // Extract exactly one frame from the front of the buffer
     QByteArray frameData = buffer.left(frameSize);
-
-    // Deserialize into CANFrame structure
     CANFrame frame = CANFrame::deserialize(frameData);
-
-    // Remove parsed data from buffer
     buffer.remove(0, frameSize);
 
-    // Notify listeners
     emit frameReceived(frame);
 
-    return true;  // Successfully parsed a frame
+    return true;
 }
 
+// ============================================================================
+// Frame Transmission
+// ============================================================================
+
+/**
+ * Serialize and send a CAN frame to the connected server.
+ * Emits frameSent() on success, errorOccurred() if not connected.
+ */
 void TcpClient::sendFrame(const CANFrame& frame)
 {
     if (socket->state() != QAbstractSocket::ConnectedState) {
@@ -111,6 +166,5 @@ void TcpClient::sendFrame(const CANFrame& frame)
     socket->write(data);
     socket->flush();
 
-    emit frameSent(frame);  // Only emit if successfully sent
+    emit frameSent(frame);
 }
-

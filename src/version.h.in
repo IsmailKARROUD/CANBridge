@@ -1,10 +1,18 @@
+/**
+ * @file version.h.in
+ * @brief Version header template processed by CMake's configure_file().
+ *
+ * CMake replaces the @...@ placeholders with values from the project()
+ * command at build time, generating version.h in the build directory.
+ */
+
 #ifndef VERSION_H
 #define VERSION_H
 
-#define APP_VERSION "@PROJECT_VERSION@"
-#define APP_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define APP_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define APP_VERSION_PATCH @PROJECT_VERSION_PATCH@
-#define APP_NAME "@PROJECT_NAME@"
+#define APP_VERSION "@PROJECT_VERSION@"              ///< Full version string (e.g., "0.1.0")
+#define APP_VERSION_MAJOR @PROJECT_VERSION_MAJOR@    ///< Major version number
+#define APP_VERSION_MINOR @PROJECT_VERSION_MINOR@    ///< Minor version number
+#define APP_VERSION_PATCH @PROJECT_VERSION_PATCH@    ///< Patch version number
+#define APP_NAME "@PROJECT_NAME@"                    ///< Application name from CMake project()
 
 #endif // VERSION_H

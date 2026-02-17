@@ -1,3 +1,13 @@
+/**
+ * @file mainwindow.cpp
+ * @brief Implementation of the MainWindow class.
+ *
+ * Contains the construction of all four tabs (Connection, Log, Simulator,
+ * Analyzer), signal/slot wiring between the UI and backend components
+ * (TcpServer, TcpClient, MessageModel), event handlers, theme management,
+ * and CSV import/export logic.
+ */
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGridLayout>
@@ -13,7 +23,14 @@
 #include "mainwindow.h"
 #include "aboutdialog.h"
 
-// Constructor: Initialize main window and all components
+// ============================================================================
+// Constructor / Destructor
+// ============================================================================
+
+/**
+ * Build the entire UI, instantiate backend components, and wire all
+ * signal/slot connections between the server, client, model, and UI.
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , server(new TcpServer(this))
@@ -24,62 +41,81 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("CANBridge - CAN Bus Analyzer/Simulator");
     resize(1000, 600);
 
-    // Create central tab widget
+    // Central tab widget holds all four application tabs
     tabWidget = new QTabWidget(this);
     setCentralWidget(tabWidget);
 
-    // Build all tabs
+    // Build each tab's layout and widgets
     setupConnectionTab();
     setupLogTab();
     setupSimulatorTab();
     setupAnalyzerTab();
 
-    //Theme
+    // Initialize theme and menu bar
     isDarkMode = false;
     setupMenuBar();
 
-    // ========== Server event connections ==========
+    // ==== Server signal connections ====
+
+    // Log when a remote client connects to our server
     connect(server, &TcpServer::clientConnected, this, &MainWindow::onServerClientConnected);
+
+    // Log when a remote client disconnects
     connect(server, &TcpServer::clientDisconnected, this, [this](const QString& address) {
         addLogEvent(QString("Client disconnected: %1").arg(address), "Server");
     });
+
+    // Display server errors in the status indicator and log
     connect(server, &TcpServer::errorOccurred, this, [this](const QString& error) {
         serverStatusIndicator->setText("● Error");
         serverStatusIndicator->setStyleSheet("QLabel { color: red; font-weight: bold; }");
         addLogEvent("Server error: " + error, "Server");
     });
+
+    // Log outgoing frames and update the simulator status label
     connect(server, &TcpServer::frameSent, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
         lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
         lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
+    // Add frames received by the server to the analyzer model
     connect(server, &TcpServer::frameReceived, messageModel, &MessageModel::addFrame);
+
+    // Also log frames received by the server
     connect(server, &TcpServer::frameReceived, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
 
+    // ==== Client signal connections ====
 
-    // ========== Client event connections ==========
+    // Handle client connection/disconnection for UI updates
     connect(client, &TcpClient::connected, this, &MainWindow::onClientConnected);
     connect(client, &TcpClient::disconnected, this, &MainWindow::onClientDisconnected);
+
+    // Display client errors
     connect(client, &TcpClient::errorOccurred, this, [this](const QString& error) {
         clientStatusIndicator->setText("● Error");
         clientStatusIndicator->setStyleSheet("QLabel { color: red; font-weight: bold; }");
         addLogEvent("Client error: " + error, "Client");
     });
+
+    // Add frames received by the client to the analyzer model and log
     connect(client, &TcpClient::frameReceived, messageModel, &MessageModel::addFrame);
     connect(client, &TcpClient::frameReceived, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
+
+    // Log frames sent by the client and update the simulator status label
     connect(client, &TcpClient::frameSent, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
         lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
         lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
+    // ==== Model signal connections ====
 
-    // ========== UI updates ==========
+    // Update the message count label whenever a new frame is added
     connect(messageModel, &MessageModel::frameAdded, this, [this]() {
         messageCountLabel->setText(QString("Messages: %1").arg(messageModel->rowCount()));
     });
@@ -89,13 +125,21 @@ MainWindow::~MainWindow()
 {
 }
 
-// ========== MENU BAR SETUP ==========
+// ============================================================================
+// Menu Bar Setup
+// ============================================================================
+
+/**
+ * Create the application menu bar with:
+ *  - CANBridge menu: About dialog and Quit action
+ *  - View menu: Theme selection (Auto/Light/Dark)
+ */
 void MainWindow::setupMenuBar()
 {
     QMenuBar* menuBar = new QMenuBar(this);
     setMenuBar(menuBar);
 
-    // CANBridge menu
+    // -- CANBridge application menu --
     QMenu* appMenu = menuBar->addMenu("CANBridge");
 
     QAction* aboutAction = appMenu->addAction("About CANBridge");
@@ -110,12 +154,11 @@ void MainWindow::setupMenuBar()
     quitAction->setShortcut(QKeySequence::Quit);
     connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
-    // View menu
+    // -- View menu with theme selection --
     QMenu* viewMenu = menuBar->addMenu("View");
 
-    // Theme submenu
     QMenu* themeMenu = viewMenu->addMenu("Theme");
-    QActionGroup* themeGroup = new QActionGroup(this);
+    QActionGroup* themeGroup = new QActionGroup(this);  // Ensures mutual exclusivity
 
     QAction* autoThemeAction = themeMenu->addAction("Auto (System)");
     autoThemeAction->setCheckable(true);
@@ -131,8 +174,7 @@ void MainWindow::setupMenuBar()
     themeGroup->addAction(darkModeAction);
 
     connect(autoThemeAction, &QAction::triggered, this, [this]() {
-        // Detect system theme (simplified - would need platform-specific code)
-        applyTheme(false); // Default to light for now
+        applyTheme(false);  // Default to light (platform detection not yet implemented)
     });
 
     connect(lightThemeAction, &QAction::triggered, this, [this]() {
@@ -144,12 +186,16 @@ void MainWindow::setupMenuBar()
     });
 }
 
+/**
+ * Apply a dark or light theme to the entire application via stylesheet.
+ * Dark theme uses a custom stylesheet; light theme clears the stylesheet
+ * to restore Qt's default platform look.
+ */
 void MainWindow::applyTheme(bool isDark)
 {
     isDarkMode = isDark;
 
     if (isDark) {
-        // Dark theme stylesheet
         qApp->setStyleSheet(R"(
             QMainWindow, QWidget {
                 background-color: #2b2b2b;
@@ -226,25 +272,33 @@ void MainWindow::applyTheme(bool isDark)
             }
         )");
     } else {
-        // Light theme (default Qt styling)
+        // Clear stylesheet to restore default platform appearance
         qApp->setStyleSheet("");
     }
 }
 
-// ========== TAB 1: CONNECTION ==========
+// ============================================================================
+// Tab 1: Connection
+// ============================================================================
+
+/**
+ * Build the Connection tab with two sections:
+ *  - Server: port selector, start/stop buttons, status indicator
+ *  - Client: host/port inputs, connect/disconnect buttons, status indicator
+ */
 void MainWindow::setupConnectionTab()
 {
     QWidget* connTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(connTab);
 
-    // ===== Server Section =====
+    // -- Server section --
     QGroupBox* serverGroup = new QGroupBox("Server");
     QHBoxLayout* serverLayout = new QHBoxLayout();
 
     serverLayout->addWidget(new QLabel("Port:"));
     serverPortSpin = new QSpinBox();
-    serverPortSpin->setRange(1024, 65535);
-    serverPortSpin->setValue(5555);
+    serverPortSpin->setRange(1024, 65535);  // Valid non-privileged port range
+    serverPortSpin->setValue(5555);          // Default port
     serverLayout->addWidget(serverPortSpin);
 
     serverStatusIndicator = new QLabel("● Stopped");
@@ -256,7 +310,7 @@ void MainWindow::setupConnectionTab()
 
     startServerBtn = new QPushButton("Start");
     stopServerBtn = new QPushButton("Stop");
-    stopServerBtn->setEnabled(false);
+    stopServerBtn->setEnabled(false);       // Disabled until server is started
     serverLayout->addWidget(startServerBtn);
     serverLayout->addWidget(stopServerBtn);
     serverLayout->addStretch();
@@ -264,12 +318,12 @@ void MainWindow::setupConnectionTab()
     serverGroup->setLayout(serverLayout);
     mainLayout->addWidget(serverGroup);
 
-    // ===== Client Section =====
+    // -- Client section --
     QGroupBox* clientGroup = new QGroupBox("Client");
     QHBoxLayout* clientLayout = new QHBoxLayout();
 
     clientLayout->addWidget(new QLabel("Host:"));
-    hostEdit = new QLineEdit("127.0.0.1");
+    hostEdit = new QLineEdit("127.0.0.1");  // Default to localhost
     clientLayout->addWidget(hostEdit);
 
     clientLayout->addWidget(new QLabel("Port:"));
@@ -285,7 +339,7 @@ void MainWindow::setupConnectionTab()
 
     connectBtn = new QPushButton("Connect");
     disconnectBtn = new QPushButton("Disconnect");
-    disconnectBtn->setEnabled(false);
+    disconnectBtn->setEnabled(false);       // Disabled until connected
     clientLayout->addWidget(connectBtn);
     clientLayout->addWidget(disconnectBtn);
     clientLayout->addStretch();
@@ -296,20 +350,27 @@ void MainWindow::setupConnectionTab()
     mainLayout->addStretch();
     tabWidget->addTab(connTab, "Connection");
 
-    // Connect signals
+    // Wire button signals to slot handlers
     connect(startServerBtn, &QPushButton::clicked, this, &MainWindow::onStartServer);
     connect(stopServerBtn, &QPushButton::clicked, this, &MainWindow::onStopServer);
     connect(connectBtn, &QPushButton::clicked, this, &MainWindow::onConnect);
     connect(disconnectBtn, &QPushButton::clicked, this, &MainWindow::onDisconnect);
 }
 
-// ========== TAB 2: LOG ==========
+// ============================================================================
+// Tab 2: Log
+// ============================================================================
+
+/**
+ * Build the Log tab with a category filter dropdown and a read-only text area
+ * that displays timestamped events from server, client, and frame operations.
+ */
 void MainWindow::setupLogTab()
 {
     QWidget* logTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(logTab);
 
-    // Filter controls
+    // Category filter dropdown
     QHBoxLayout* filterLayout = new QHBoxLayout();
     filterLayout->addWidget(new QLabel("Filter:"));
     logFilterCombo = new QComboBox();
@@ -318,7 +379,7 @@ void MainWindow::setupLogTab()
     filterLayout->addStretch();
     mainLayout->addLayout(filterLayout);
 
-    // Log display
+    // Read-only log display area
     logDisplay = new QTextEdit();
     logDisplay->setReadOnly(true);
     logDisplay->setPlaceholderText("Events will appear here...");
@@ -330,34 +391,43 @@ void MainWindow::setupLogTab()
             this, &MainWindow::onLogFilterChanged);
 }
 
-// ========== TAB 3: SIMULATOR ==========
+// ============================================================================
+// Tab 3: Simulator
+// ============================================================================
+
+/**
+ * Build the Simulator tab with:
+ *  - Message configuration: CAN ID (hex), DLC (0-8), data bytes (hex)
+ *  - Transmission controls: Send Once, periodic interval, Start/Stop Periodic
+ *  - Status display showing the last send operation result
+ */
 void MainWindow::setupSimulatorTab()
 {
     QWidget* simTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(simTab);
 
-    // Message Configuration
+    // -- Message configuration group --
     QGroupBox* msgGroup = new QGroupBox("Message Configuration");
     QGridLayout* msgLayout = new QGridLayout();
 
     msgLayout->addWidget(new QLabel("CAN ID (hex):"), 0, 0);
-    canIdEdit = new QLineEdit("0x123");
+    canIdEdit = new QLineEdit("0x123");         // Default CAN ID
     msgLayout->addWidget(canIdEdit, 0, 1);
 
     msgLayout->addWidget(new QLabel("DLC:"), 1, 0);
     dlcSpin = new QSpinBox();
-    dlcSpin->setRange(0, 8);
+    dlcSpin->setRange(0, 8);                    // CAN DLC range
     dlcSpin->setValue(8);
     msgLayout->addWidget(dlcSpin, 1, 1);
 
     msgLayout->addWidget(new QLabel("Data (hex):"), 2, 0);
-    dataEdit = new QLineEdit("01 02 03 04 05 06 07 08");
+    dataEdit = new QLineEdit("01 02 03 04 05 06 07 08");  // Default data bytes
     msgLayout->addWidget(dataEdit, 2, 1);
 
     msgGroup->setLayout(msgLayout);
     mainLayout->addWidget(msgGroup);
 
-    // Transmission Controls
+    // -- Transmission controls group --
     QGroupBox* txGroup = new QGroupBox("Transmission");
     QHBoxLayout* txLayout = new QHBoxLayout();
 
@@ -366,13 +436,13 @@ void MainWindow::setupSimulatorTab()
 
     txLayout->addWidget(new QLabel("Interval (ms):"));
     intervalSpin = new QSpinBox();
-    intervalSpin->setRange(10, 10000);
-    intervalSpin->setValue(100);
+    intervalSpin->setRange(10, 10000);          // 10ms to 10s range
+    intervalSpin->setValue(100);                 // Default 100ms interval
     txLayout->addWidget(intervalSpin);
 
     sendPeriodicBtn = new QPushButton("Start Periodic");
     stopPeriodicBtn = new QPushButton("Stop Periodic");
-    stopPeriodicBtn->setEnabled(false);
+    stopPeriodicBtn->setEnabled(false);         // Disabled until periodic starts
     txLayout->addWidget(sendPeriodicBtn);
     txLayout->addWidget(stopPeriodicBtn);
     txLayout->addStretch();
@@ -380,7 +450,7 @@ void MainWindow::setupSimulatorTab()
     txGroup->setLayout(txLayout);
     mainLayout->addWidget(txGroup);
 
-    // Last frame status
+    // -- Last action status --
     QHBoxLayout* statusLayout = new QHBoxLayout();
     statusLayout->addWidget(new QLabel("Last action:"));
     lastFrameStatusLabel = new QLabel("No frames sent yet");
@@ -392,25 +462,32 @@ void MainWindow::setupSimulatorTab()
     mainLayout->addStretch();
     tabWidget->addTab(simTab, "Simulator");
 
-    // Connect signals
+    // Wire button signals
     connect(sendOnceBtn, &QPushButton::clicked, this, &MainWindow::onSendFrame);
     connect(sendPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onSendPeriodic);
     connect(stopPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onStopPeriodic);
 }
 
-// ========== TAB 4: ANALYZER ==========
+// ============================================================================
+// Tab 4: Analyzer
+// ============================================================================
+
+/**
+ * Build the Analyzer tab with a QTableView bound to MessageModel and
+ * controls for clearing, saving (CSV export), and loading (CSV import) frames.
+ */
 void MainWindow::setupAnalyzerTab()
 {
     QWidget* analyzerTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(analyzerTab);
 
-    // Message table
+    // Frame display table (bound to MessageModel)
     messageTable = new QTableView();
     messageTable->setModel(messageModel);
     messageTable->horizontalHeader()->setStretchLastSection(true);
     mainLayout->addWidget(messageTable);
 
-    // Controls
+    // Control bar: message count, clear, save, load
     QHBoxLayout* controlLayout = new QHBoxLayout();
     messageCountLabel = new QLabel("Messages: 0");
     controlLayout->addWidget(messageCountLabel);
@@ -426,13 +503,20 @@ void MainWindow::setupAnalyzerTab()
     mainLayout->addLayout(controlLayout);
     tabWidget->addTab(analyzerTab, "Analyzer");
 
-    // Connect signals
+    // Wire button signals
     connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClearMessages);
     connect(saveFramesBtn, &QPushButton::clicked, this, &MainWindow::onSaveFrames);
     connect(loadFramesBtn, &QPushButton::clicked, this, &MainWindow::onLoadFrames);
 }
 
-// ========== CONNECTION HANDLERS ==========
+// ============================================================================
+// Connection Handlers
+// ============================================================================
+
+/**
+ * Start the TCP server on the port specified in the UI.
+ * Updates the status indicator and enables/disables controls accordingly.
+ */
 void MainWindow::onStartServer()
 {
     if (server->startServer(serverPortSpin->value())) {
@@ -440,7 +524,7 @@ void MainWindow::onStartServer()
         serverStatusIndicator->setStyleSheet("QLabel { color: green; font-weight: bold; }");
         startServerBtn->setEnabled(false);
         stopServerBtn->setEnabled(true);
-        serverPortSpin->setEnabled(false);
+        serverPortSpin->setEnabled(false);  // Lock port while server is running
 
         addLogEvent(QString("Server started on port %1").arg(serverPortSpin->value()), "Server");
     } else {
@@ -450,6 +534,9 @@ void MainWindow::onStartServer()
     }
 }
 
+/**
+ * Stop the TCP server, reset the status indicator, and re-enable controls.
+ */
 void MainWindow::onStopServer()
 {
     server->stopServer();
@@ -457,69 +544,101 @@ void MainWindow::onStopServer()
     serverStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
     startServerBtn->setEnabled(true);
     stopServerBtn->setEnabled(false);
-    serverPortSpin->setEnabled(true);
+    serverPortSpin->setEnabled(true);  // Unlock port for reconfiguration
 
     addLogEvent("Server stopped", "Server");
 }
 
+/**
+ * Initiate a TCP connection to the host and port specified in the UI.
+ */
 void MainWindow::onConnect()
 {
     client->connectToServer(hostEdit->text(), clientPortSpin->value());
 }
 
+/**
+ * Disconnect the client from the remote server.
+ */
 void MainWindow::onDisconnect()
 {
     client->disconnectFromServer();
 }
 
+/**
+ * Called when the client successfully connects to a remote server.
+ * Updates the status indicator and locks the host/port inputs.
+ */
 void MainWindow::onClientConnected()
 {
     clientStatusIndicator->setText("● Connected");
     clientStatusIndicator->setStyleSheet("QLabel { color: green; font-weight: bold; }");
     connectBtn->setEnabled(false);
     disconnectBtn->setEnabled(true);
-    hostEdit->setEnabled(false);
+    hostEdit->setEnabled(false);        // Lock inputs while connected
     clientPortSpin->setEnabled(false);
 
     addLogEvent(QString("Connected to %1:%2").arg(hostEdit->text()).arg(clientPortSpin->value()), "Client");
 }
 
+/**
+ * Called when the client disconnects from the remote server.
+ * Resets the status indicator and unlocks host/port inputs.
+ */
 void MainWindow::onClientDisconnected()
 {
     clientStatusIndicator->setText("● Disconnected");
     clientStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
     connectBtn->setEnabled(true);
     disconnectBtn->setEnabled(false);
-    hostEdit->setEnabled(true);
+    hostEdit->setEnabled(true);         // Unlock inputs for reconfiguration
     clientPortSpin->setEnabled(true);
 
     addLogEvent("Disconnected from server", "Client");
 }
 
+/**
+ * Log when a remote client connects to our server.
+ */
 void MainWindow::onServerClientConnected(const QString& address)
 {
     addLogEvent(QString("Client connected: %1").arg(address), "Server");
 }
 
-// ========== SIMULATOR HANDLERS ==========
+// ============================================================================
+// Simulator Handlers
+// ============================================================================
+
+/**
+ * Parse the CAN ID, DLC, and data bytes from the simulator UI inputs,
+ * construct a CANFrame, and send it via server (if running) or client (if connected).
+ *
+ * Validates:
+ *  - Server is running or client is connected
+ *  - CAN ID is valid hex and within 29-bit range (0x1FFFFFFF max)
+ *  - Data bytes are valid hex and at most 8 bytes
+ */
 void MainWindow::onSendFrame()
 {
-    // Check if server is running
+    // Require an active connection (server or client)
     if (!server->isListening() && !client->isConnected()) {
         lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
+
+    // Parse CAN ID from hex input
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
-    if (!ok || id > 0x1FFFFFFF) {
+    if (!ok || id > 0x1FFFFFFF) {  // 29-bit max for extended CAN ID
         addLogEvent("Error: Invalid CAN ID", "Frame");
         lastFrameStatusLabel->setText("✗ Error: Invalid CAN ID");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
 
+    // Parse data bytes from space-separated hex string
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
     if (dataList.size() > 8) {
         addLogEvent("Error: Max 8 data bytes", "Frame");
@@ -536,23 +655,33 @@ void MainWindow::onSendFrame()
         data[i] = static_cast<quint8>(byte);
     }
 
+    // Build and send the frame via the active channel
     CANFrame frame(id, dlcSpin->value(), data);
-    if(server->isListening()) {server->sendFrame(frame);}
-    else if(client->isConnected()) {client->sendFrame(frame);}
-    else{
+    if (server->isListening()) {
+        server->sendFrame(frame);
+    } else if (client->isConnected()) {
+        client->sendFrame(frame);
+    } else {
         lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
     }
 }
 
+/**
+ * Parse a CAN frame from the UI and start periodic transmission.
+ * Uses the server's periodic timer if the server is running, otherwise
+ * sends a single frame via the client (periodic client transmission not yet supported).
+ */
 void MainWindow::onSendPeriodic()
 {
-    // Check if server is running
+    // Require an active connection
     if (!server->isListening() && !client->isConnected()) {
         lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
         return;
     }
+
+    // Parse CAN ID
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
@@ -561,6 +690,7 @@ void MainWindow::onSendPeriodic()
         return;
     }
 
+    // Parse data bytes
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
     if (dataList.size() > 8) {
         addLogEvent("Error: Max 8 data bytes", "Frame");
@@ -582,12 +712,13 @@ void MainWindow::onSendPeriodic()
     if (server->isListening()) {
         server->addPeriodicFrame(frame, intervalSpin->value());
     } else if (client->isConnected()) {
-        client->sendFrame(frame); // Note: Client doesn't have periodic yet
-    } else{
+        client->sendFrame(frame);  // Single send — client periodic not yet implemented
+    } else {
         lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
     }
 
+    // Update button states
     sendPeriodicBtn->setEnabled(false);
     stopPeriodicBtn->setEnabled(true);
 
@@ -595,6 +726,9 @@ void MainWindow::onSendPeriodic()
                     .arg(id, 0, 16).arg(intervalSpin->value()), "Frame");
 }
 
+/**
+ * Stop all periodic frame transmissions and reset button states.
+ */
 void MainWindow::onStopPeriodic()
 {
     server->clearPeriodicFrames();
@@ -604,13 +738,26 @@ void MainWindow::onStopPeriodic()
     addLogEvent("Stopped periodic transmission", "Frame");
 }
 
-// ========== ANALYZER HANDLERS ==========
+// ============================================================================
+// Analyzer Handlers
+// ============================================================================
+
+/**
+ * Clear all captured frames from the model and reset the message count.
+ */
 void MainWindow::onClearMessages()
 {
     messageModel->clear();
     messageCountLabel->setText("Messages: 0");
 }
 
+/**
+ * Export all captured frames to a CSV file.
+ *
+ * CSV format:
+ *   Timestamp,ID,DLC,Data
+ *   12:34:56.789,0x123,8,01 02 03 04 05 06 07 08
+ */
 void MainWindow::onSaveFrames()
 {
     QString filename = QFileDialog::getSaveFileName(this, "Save Frames", "", "CSV Files (*.csv)");
@@ -620,8 +767,9 @@ void MainWindow::onSaveFrames()
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
 
     QTextStream out(&file);
-    out << "Timestamp,ID,DLC,Data\n";
+    out << "Timestamp,ID,DLC,Data\n";  // CSV header
 
+    // Write each frame as a CSV row
     for (int i = 0; i < messageModel->rowCount(); ++i) {
         for (int j = 0; j < 4; ++j) {
             out << messageModel->data(messageModel->index(i, j)).toString();
@@ -633,6 +781,15 @@ void MainWindow::onSaveFrames()
     addLogEvent(QString("Saved %1 frames to %2").arg(messageModel->rowCount()).arg(filename), "Frame");
 }
 
+/**
+ * Import CAN frames from a CSV file and add them to the analyzer model.
+ *
+ * Expected CSV format:
+ *   Timestamp,ID,DLC,Data
+ *   (timestamp is ignored on import; a new timestamp is generated)
+ *
+ * Invalid rows are silently skipped.
+ */
 void MainWindow::onLoadFrames()
 {
     QString filename = QFileDialog::getOpenFileName(this, "Load Frames", "", "CSV Files (*.csv)");
@@ -642,23 +799,26 @@ void MainWindow::onLoadFrames()
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
     QTextStream in(&file);
-    in.readLine(); // Skip header
+    in.readLine();  // Skip CSV header row
 
     int frameCount = 0;
     while (!in.atEnd()) {
         QString line = in.readLine();
         QStringList fields = line.split(',', Qt::SkipEmptyParts);
 
-        if (fields.size() < 4) continue;
+        if (fields.size() < 4) continue;  // Skip malformed rows
 
+        // Parse CAN ID
         bool ok;
         QString idText = fields[1].remove("0x", Qt::CaseInsensitive);
         quint32 id = idText.toUInt(&ok, 16);
         if (!ok || id > 0x1FFFFFFF) continue;
 
+        // Parse DLC
         quint8 dlc = fields[2].toUInt(&ok, 10);
         if (!ok) continue;
 
+        // Parse data bytes
         QStringList dataList = fields[3].split(' ', Qt::SkipEmptyParts);
         if (dataList.size() > 8) continue;
 
@@ -677,7 +837,14 @@ void MainWindow::onLoadFrames()
     addLogEvent(QString("Loaded %1 frames from %2").arg(frameCount).arg(filename), "Frame");
 }
 
-// ========== LOG HANDLERS ==========
+// ============================================================================
+// Log Management
+// ============================================================================
+
+/**
+ * Handle log filter dropdown changes.
+ * Maps combo box indices to filter strings and refreshes the display.
+ */
 void MainWindow::onLogFilterChanged(int index)
 {
     QStringList filters = {"All", "Server", "Client", "Frame"};
@@ -685,6 +852,10 @@ void MainWindow::onLogFilterChanged(int index)
     updateLogDisplay();
 }
 
+/**
+ * Add a new log entry with the current timestamp.
+ * Entries are prepended (newest first) and capped at 50 to limit memory usage.
+ */
 void MainWindow::addLogEvent(const QString& message, const QString& category)
 {
     LogEntry entry;
@@ -692,9 +863,9 @@ void MainWindow::addLogEvent(const QString& message, const QString& category)
     entry.category = category;
     entry.message = message;
 
-    logHistory.prepend(entry);
+    logHistory.prepend(entry);  // Newest entries first
 
-    // Keep last 50 events
+    // Cap log history at 50 entries
     if (logHistory.size() > 50) {
         logHistory.removeLast();
     }
@@ -702,12 +873,18 @@ void MainWindow::addLogEvent(const QString& message, const QString& category)
     updateLogDisplay();
 }
 
+/**
+ * Rebuild the log display text by filtering log entries according to
+ * the currently selected category filter.
+ *
+ * Output format: [HH:MM:SS] [Category] Message text
+ */
 void MainWindow::updateLogDisplay()
 {
     QStringList displayLines;
 
     for (const LogEntry& entry : logHistory) {
-        // Apply filter
+        // Skip entries that don't match the active filter
         if (currentLogFilter != "All" && entry.category != currentLogFilter) {
             continue;
         }
