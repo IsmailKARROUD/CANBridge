@@ -43,6 +43,9 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
+    /// Change the timestamp display format and refresh the timestamp column.
+    void setTimestampFormat(const QString& format);
+
 public slots:
     /**
      * @brief Append a new CAN frame to the model.
@@ -61,6 +64,7 @@ signals:
 
 private:
     static const int MAX_FRAMES = 10000;        ///< Upper limit to prevent memory exhaustion
+    QString m_timestampFormat = "hh:mm:ss.zzz"; ///< Current timestamp display format
     struct FrameEntry {
         CANFrame frame;
         bool isSent;  // true = sent, false = received

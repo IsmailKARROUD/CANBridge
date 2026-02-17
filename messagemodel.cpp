@@ -58,7 +58,9 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:  // Timestamp
-            return QDateTime::fromMSecsSinceEpoch(entry.frame.getTimestamp()).toString("hh:mm:ss.zzz");
+            if (m_timestampFormat == "ms")
+                return QString::number(entry.frame.getTimestamp());
+            return QDateTime::fromMSecsSinceEpoch(entry.frame.getTimestamp()).toString(m_timestampFormat);
         case 1:  // Direction
             return entry.isSent ? "TX" : "RX";
         case 2:  // CAN ID in hex
@@ -133,4 +135,16 @@ void MessageModel::clear()
     beginResetModel();
     frames.clear();
     endResetModel();
+}
+
+/**
+ * Change the timestamp display format and refresh the timestamp column.
+ * @param format Qt date/time format string (e.g., "hh:mm:ss.zzz" or "yyyy-MM-dd hh:mm:ss.zzz").
+ */
+void MessageModel::setTimestampFormat(const QString& format)
+{
+    m_timestampFormat = format;
+    if (!frames.isEmpty()) {
+        emit dataChanged(index(0, 0), index(frames.size() - 1, 0));
+    }
 }

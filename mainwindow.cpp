@@ -185,6 +185,35 @@ void MainWindow::setupMenuBar()
     connect(darkModeAction, &QAction::triggered, this, [this]() {
         applyTheme(true);
     });
+
+    // -- Timestamp format selection --
+    QMenu* timestampMenu = viewMenu->addMenu("Timestamp Format");
+    QActionGroup* tsGroup = new QActionGroup(this);
+
+    QAction* timeOnlyAction = timestampMenu->addAction("Time Only (HH:mm:ss.zzz)");
+    timeOnlyAction->setCheckable(true);
+    timeOnlyAction->setChecked(true);
+    tsGroup->addAction(timeOnlyAction);
+
+    QAction* dateTimeAction = timestampMenu->addAction("Date && Time (yyyy-MMM-dd HH:mm:ss.zzz)");
+    dateTimeAction->setCheckable(true);
+    tsGroup->addAction(dateTimeAction);
+
+    QAction* rawMsAction = timestampMenu->addAction("Raw Milliseconds");
+    rawMsAction->setCheckable(true);
+    tsGroup->addAction(rawMsAction);
+
+    connect(timeOnlyAction, &QAction::triggered, this, [this]() {
+        messageModel->setTimestampFormat("hh:mm:ss.zzz");
+    });
+
+    connect(dateTimeAction, &QAction::triggered, this, [this]() {
+        messageModel->setTimestampFormat("yyyy-MMM-dd hh:mm:ss.zzz");
+    });
+
+    connect(rawMsAction, &QAction::triggered, this, [this]() {
+        messageModel->setTimestampFormat("ms");
+    });
 }
 
 /**
