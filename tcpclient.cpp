@@ -7,6 +7,7 @@
  */
 
 #include "tcpclient.h"
+#include <QDateTime>
 
 // ============================================================================
 // Constructor / Destructor
@@ -19,11 +20,14 @@
 TcpClient::TcpClient(QObject *parent)
     : QObject(parent)
     , socket(new QTcpSocket(this))
+    , periodicTimer(new QTimer(this))
 {
     connect(socket, &QTcpSocket::connected, this, &TcpClient::onConnected);
     connect(socket, &QTcpSocket::disconnected, this, &TcpClient::onDisconnected);
     connect(socket, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
     connect(socket, &QTcpSocket::errorOccurred, this, &TcpClient::onError);
+    connect(periodicTimer, &QTimer::timeout, this, &TcpClient::onSendPeriodicFrames);
+    periodicTimer->setInterval(10);  // 10ms resolution for periodic checks
 }
 
 /**
@@ -33,6 +37,7 @@ TcpClient::TcpClient(QObject *parent)
 TcpClient::~TcpClient()
 {
     socket->disconnect();
+    periodicTimer->stop();
     disconnectFromServer();
 }
 
@@ -83,11 +88,12 @@ void TcpClient::onConnected()
 
 /**
  * Called when the TCP connection is closed.
- * Clears the receive buffer.
+ * Clears the receive buffer and stops periodic transmissions.
  */
 void TcpClient::onDisconnected()
 {
     buffer.clear();
+    clearPeriodicFrames();
     emit disconnected();
 }
 
@@ -167,4 +173,53 @@ void TcpClient::sendFrame(const CANFrame& frame)
     socket->flush();
 
     emit frameSent(frame);
+}
+
+// ============================================================================
+// Periodic Transmission
+// ============================================================================
+
+/**
+ * Add a frame to the periodic transmission schedule.
+ * The frame will be sent at the specified interval. Setting lastSent to 0
+ * ensures the first transmission happens immediately on the next timer tick.
+ */
+void TcpClient::addPeriodicFrame(const CANFrame& frame, int intervalMs)
+{
+    PeriodicFrame pf;
+    pf.frame = frame;
+    pf.interval = intervalMs;
+    pf.lastSent = 0;  // Triggers immediate first transmission
+    periodicFrames.append(pf);
+
+    if (!periodicTimer->isActive()) {
+        periodicTimer->start();
+    }
+}
+
+/**
+ * Remove all periodic frames and stop the periodic timer.
+ */
+void TcpClient::clearPeriodicFrames()
+{
+    periodicFrames.clear();
+    periodicTimer->stop();
+}
+
+/**
+ * Timer callback (every 10ms): iterate through all periodic frames and
+ * transmit any whose interval has elapsed since their last send time.
+ * Each frame's timestamp is updated to the current time before sending.
+ */
+void TcpClient::onSendPeriodicFrames()
+{
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+
+    for (auto& pf : periodicFrames) {
+        if (now - pf.lastSent >= pf.interval) {
+            pf.frame.setTimestamp(now);
+            sendFrame(pf.frame);
+            pf.lastSent = now;
+        }
+    }
 }

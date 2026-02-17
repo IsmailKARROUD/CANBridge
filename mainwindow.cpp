@@ -742,7 +742,7 @@ void MainWindow::onSendPeriodic()
     if (server->isListening()) {
         server->addPeriodicFrame(frame, intervalSpin->value());
     } else if (client->isConnected()) {
-        client->sendFrame(frame);  // Single send — client periodic not yet implemented
+        client->addPeriodicFrame(frame, intervalSpin->value());
     } else {
         lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
         lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
@@ -762,6 +762,7 @@ void MainWindow::onSendPeriodic()
 void MainWindow::onStopPeriodic()
 {
     server->clearPeriodicFrames();
+    client->clearPeriodicFrames();
     sendPeriodicBtn->setEnabled(true);
     stopPeriodicBtn->setEnabled(false);
 

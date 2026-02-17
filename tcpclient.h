@@ -12,6 +12,8 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QTimer>
+#include <QList>
 #include "canframe.h"
 
 /**
@@ -53,6 +55,16 @@ public:
      */
     void sendFrame(const CANFrame& frame);
 
+    /**
+     * @brief Schedule a frame for periodic transmission to the server.
+     * @param frame      The CAN frame to send repeatedly.
+     * @param intervalMs Transmission interval in milliseconds.
+     */
+    void addPeriodicFrame(const CANFrame& frame, int intervalMs);
+
+    /// Remove all periodic frames and stop the periodic timer.
+    void clearPeriodicFrames();
+
 signals:
     /// Emitted when the TCP connection is successfully established.
     void connected();
@@ -74,10 +86,22 @@ private slots:
     void onDisconnected();    ///< Handle TCP disconnection
     void onReadyRead();       ///< Handle incoming data from the server
     void onError(QAbstractSocket::SocketError socketError);  ///< Handle socket errors
+    void onSendPeriodicFrames();  ///< Timer callback for periodic frame transmission
 
 private:
     QTcpSocket* socket;     ///< The TCP socket used for server communication
     QByteArray buffer;      ///< Receive buffer for accumulating partial frame data
+    QTimer* periodicTimer;  ///< Timer that drives periodic frame transmission (10ms tick)
+
+    /**
+     * @brief Describes a frame scheduled for periodic transmission.
+     */
+    struct PeriodicFrame {
+        CANFrame frame;     ///< The frame to send
+        int interval;       ///< Transmission interval in milliseconds
+        qint64 lastSent;    ///< Timestamp of last transmission (ms since epoch)
+    };
+    QList<PeriodicFrame> periodicFrames;  ///< All scheduled periodic frames
 
     /**
      * @brief Try to extract one complete 21-byte CAN frame from the buffer.
