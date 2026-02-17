@@ -30,6 +30,7 @@ qt_add_executable(CANBridge
     aboutdialog.cpp
     mainwindow.ui
     tcpclient.h tcpclient.cpp
+    framefilterproxymodel.h framefilterproxymodel.cpp
 )
 
 # Link against Qt libraries

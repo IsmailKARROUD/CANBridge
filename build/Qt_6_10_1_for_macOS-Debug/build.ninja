@@ -113,6 +113,14 @@ build CMakeFiles/CANBridge.dir/tcpclient.cpp.o: CXX_COMPILER__CANBridge_unscanne
   OBJECT_DIR = CMakeFiles/CANBridge.dir
   OBJECT_FILE_DIR = CMakeFiles/CANBridge.dir
 
+build CMakeFiles/CANBridge.dir/framefilterproxymodel.cpp.o: CXX_COMPILER__CANBridge_unscanned_Debug /Users/ismac/project/QtProjects/CANBridge/framefilterproxymodel.cpp || cmake_object_order_depends_target_CANBridge
+  DEFINES = -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_WIDGETS_LIB
+  DEP_FILE = CMakeFiles/CANBridge.dir/framefilterproxymodel.cpp.o.d
+  FLAGS = -DQT_QML_DEBUG -g -std=gnu++17 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX26.2.sdk -fcolor-diagnostics
+  INCLUDES = -I/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug/CANBridge_autogen/include -I/Users/ismac/project/QtProjects/CANBridge/build/Qt_6_10_1_for_macOS-Debug -isystem /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Headers -iframework /Users/ismac/Qt/6.10.1/macos/lib -isystem /Users/ismac/Qt/6.10.1/macos/mkspecs/macx-clang -isystem /Users/ismac/Qt/6.10.1/macos/include -isystem /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Headers -isystem /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Headers -isystem /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Headers
+  OBJECT_DIR = CMakeFiles/CANBridge.dir
+  OBJECT_FILE_DIR = CMakeFiles/CANBridge.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target CANBridge
@@ -121,7 +129,7 @@ build CMakeFiles/CANBridge.dir/tcpclient.cpp.o: CXX_COMPILER__CANBridge_unscanne
 #############################################
 # Link the executable CANBridge.app/Contents/MacOS/CANBridge
 
-build CANBridge.app/Contents/MacOS/CANBridge: CXX_EXECUTABLE_LINKER__CANBridge_Debug CMakeFiles/CANBridge.dir/CANBridge_autogen/mocs_compilation.cpp.o CMakeFiles/CANBridge.dir/main.cpp.o CMakeFiles/CANBridge.dir/mainwindow.cpp.o CMakeFiles/CANBridge.dir/canframe.cpp.o CMakeFiles/CANBridge.dir/tcpserver.cpp.o CMakeFiles/CANBridge.dir/messagemodel.cpp.o CMakeFiles/CANBridge.dir/aboutdialog.cpp.o CMakeFiles/CANBridge.dir/tcpclient.cpp.o | /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/QtWidgets /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/QtNetwork /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/QtGui /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/QtCore || CANBridge_autogen CANBridge_autogen_timestamp_deps
+build CANBridge.app/Contents/MacOS/CANBridge: CXX_EXECUTABLE_LINKER__CANBridge_Debug CMakeFiles/CANBridge.dir/CANBridge_autogen/mocs_compilation.cpp.o CMakeFiles/CANBridge.dir/main.cpp.o CMakeFiles/CANBridge.dir/mainwindow.cpp.o CMakeFiles/CANBridge.dir/canframe.cpp.o CMakeFiles/CANBridge.dir/tcpserver.cpp.o CMakeFiles/CANBridge.dir/messagemodel.cpp.o CMakeFiles/CANBridge.dir/aboutdialog.cpp.o CMakeFiles/CANBridge.dir/tcpclient.cpp.o CMakeFiles/CANBridge.dir/framefilterproxymodel.cpp.o | /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/QtWidgets /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/QtNetwork /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/QtGui /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/QtCore || CANBridge_autogen CANBridge_autogen_timestamp_deps
   FLAGS = -DQT_QML_DEBUG -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX26.2.sdk
   LINK_LIBRARIES = -Wl,-rpath,/Users/ismac/Qt/6.10.1/macos/lib  /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/QtWidgets  /Users/ismac/Qt/6.10.1/macos/lib/QtNetwork.framework/Versions/A/QtNetwork  /Users/ismac/Qt/6.10.1/macos/lib/QtGui.framework/Versions/A/QtGui  -framework AppKit  -framework OpenGL  -framework ImageIO  -framework Metal  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/QtCore  -framework IOKit  -framework DiskArbitration  -framework UniformTypeIdentifiers
   LINK_PATH = -F/Users/ismac/Qt/6.10.1/macos/lib

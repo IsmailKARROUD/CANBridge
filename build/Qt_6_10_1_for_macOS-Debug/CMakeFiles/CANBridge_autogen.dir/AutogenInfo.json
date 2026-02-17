@@ -399,6 +399,12 @@
 			null
 		],
 		[
+			"/Users/ismac/project/QtProjects/CANBridge/framefilterproxymodel.h",
+			"MU",
+			"EWIEGA46WW/moc_framefilterproxymodel.cpp",
+			null
+		],
+		[
 			"/Users/ismac/project/QtProjects/CANBridge/mainwindow.h",
 			"MU",
 			"EWIEGA46WW/moc_mainwindow.cpp",
@@ -490,6 +496,11 @@
 			null
 		],
 		[ "/Users/ismac/project/QtProjects/CANBridge/canframe.cpp", "MU", null ],
+		[
+			"/Users/ismac/project/QtProjects/CANBridge/framefilterproxymodel.cpp",
+			"MU",
+			null
+		],
 		[ "/Users/ismac/project/QtProjects/CANBridge/main.cpp", "MU", null ],
 		[
 			"/Users/ismac/project/QtProjects/CANBridge/mainwindow.cpp",

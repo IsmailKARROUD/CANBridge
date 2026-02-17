@@ -36,8 +36,15 @@ MainWindow::MainWindow(QWidget *parent)
     , server(new TcpServer(this))
     , client(new TcpClient(this))
     , messageModel(new MessageModel(this))
+    , filterProxyModel(new FrameFilterProxyModel(this))
     , currentLogFilter("All")
 {
+    // Set up the proxy model chain for the Analyzer tab filtering:
+    //   QTableView  ->  FrameFilterProxyModel  ->  MessageModel
+    // The proxy intercepts row access and hides rows that don't match
+    // the user's filter criteria, without modifying the underlying data.
+    filterProxyModel->setSourceModel(messageModel);
+
     setWindowTitle("CANBridge - CAN Bus Analyzer/Simulator");
     resize(1000, 600);
 
@@ -503,21 +510,51 @@ void MainWindow::setupSimulatorTab()
 // ============================================================================
 
 /**
- * Build the Analyzer tab with a QTableView bound to MessageModel and
- * controls for clearing, saving (CSV export), and loading (CSV import) frames.
+ * Build the Analyzer tab with filter controls, a QTableView bound to the
+ * filter proxy model, and buttons for clearing, saving, and loading frames.
  */
 void MainWindow::setupAnalyzerTab()
 {
     QWidget* analyzerTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(analyzerTab);
 
-    // Frame display table (bound to MessageModel)
+    // -- Filter bar --
+    // Horizontal row of filter controls above the frame table.
+    // All filters work in real-time (update on every keystroke or selection change).
+    QHBoxLayout* filterLayout = new QHBoxLayout();
+
+    // Direction filter: combo box with "All" (no filter), "TX", or "RX"
+    filterLayout->addWidget(new QLabel("Dir:"));
+    dirFilterCombo = new QComboBox();
+    dirFilterCombo->addItems({"All", "TX", "RX"});
+    filterLayout->addWidget(dirFilterCombo);
+
+    // CAN ID filter: free-text hex substring match (e.g., "1A3" matches "0x1A3")
+    filterLayout->addWidget(new QLabel("ID:"));
+    idFilterEdit = new QLineEdit();
+    idFilterEdit->setPlaceholderText("e.g. 1A3");
+    idFilterEdit->setMaximumWidth(120);
+    filterLayout->addWidget(idFilterEdit);
+
+    // Data filter: free-text hex substring match (e.g., "FF 01" matches data containing those bytes)
+    filterLayout->addWidget(new QLabel("Data:"));
+    dataFilterEdit = new QLineEdit();
+    dataFilterEdit->setPlaceholderText("e.g. FF 01");
+    dataFilterEdit->setMaximumWidth(200);
+    filterLayout->addWidget(dataFilterEdit);
+
+    filterLayout->addStretch();
+    mainLayout->addLayout(filterLayout);
+
+    // -- Frame display table --
+    // Bound to the filter proxy model (not directly to MessageModel)
+    // so that filter changes hide/show rows without modifying the data.
     messageTable = new QTableView();
-    messageTable->setModel(messageModel);
+    messageTable->setModel(filterProxyModel);
     messageTable->horizontalHeader()->setStretchLastSection(true);
     mainLayout->addWidget(messageTable);
 
-    // Control bar: message count, clear, save, load
+    // -- Control bar: message count, clear, save, load --
     QHBoxLayout* controlLayout = new QHBoxLayout();
     messageCountLabel = new QLabel("Messages: 0");
     controlLayout->addWidget(messageCountLabel);
@@ -532,6 +569,19 @@ void MainWindow::setupAnalyzerTab()
 
     mainLayout->addLayout(controlLayout);
     tabWidget->addTab(analyzerTab, "Analyzer");
+
+    // Wire filter signals — each control updates the proxy model in real-time.
+    // Each setter calls beginResetModel()/endResetModel() internally, which
+    // causes the table to instantly show/hide rows matching the new criteria.
+    connect(dirFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this]() {
+        filterProxyModel->setDirectionFilter(dirFilterCombo->currentText());
+    });
+    connect(idFilterEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        filterProxyModel->setIdFilter(text);
+    });
+    connect(dataFilterEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        filterProxyModel->setDataFilter(text);
+    });
 
     // Wire button signals
     connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClearMessages);

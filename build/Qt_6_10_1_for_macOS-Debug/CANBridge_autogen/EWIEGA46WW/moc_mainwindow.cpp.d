@@ -708,6 +708,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QByteArray \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QList \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QObject \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QSortFilterProxyModel \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QTimer \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/QtTypes \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q17memory.h \
@@ -720,6 +721,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/q23utility.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstracteventdispatcher.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstractitemmodel.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qabstractproxymodel.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalgorithms.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qalloc.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qanystringview.h \
@@ -803,6 +805,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qsharedpointer.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qsharedpointer_impl.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qsize.h \
+  /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qsortfilterproxymodel.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qspan.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qstdlibdetection.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtCore.framework/Versions/A/Headers/qstring.h \
@@ -925,6 +928,7 @@
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qtwidgetsglobal.h \
   /Users/ismac/Qt/6.10.1/macos/lib/QtWidgets.framework/Versions/A/Headers/qwidget.h \
   /Users/ismac/project/QtProjects/CANBridge/CANFrame.h \
+  /Users/ismac/project/QtProjects/CANBridge/framefilterproxymodel.h \
   /Users/ismac/project/QtProjects/CANBridge/messagemodel.h \
   /Users/ismac/project/QtProjects/CANBridge/tcpclient.h \
   /Users/ismac/project/QtProjects/CANBridge/tcpserver.h

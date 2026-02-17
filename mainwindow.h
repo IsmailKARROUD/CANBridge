@@ -27,6 +27,7 @@
 #include "tcpserver.h"
 #include "tcpclient.h"
 #include "messagemodel.h"
+#include "framefilterproxymodel.h"
 
 /**
  * @class MainWindow
@@ -123,7 +124,10 @@ private:
     QLabel* lastFrameStatusLabel;       ///< Status of the last frame send operation
 
     // -- Analyzer tab --
-    QTableView* messageTable;           ///< Table view bound to MessageModel
+    QTableView* messageTable;           ///< Table view bound to proxy model
+    QComboBox* dirFilterCombo;          ///< Direction filter: All / TX / RX
+    QLineEdit* idFilterEdit;            ///< CAN ID filter (hex substring match)
+    QLineEdit* dataFilterEdit;          ///< Data filter (hex substring match)
     QPushButton* clearBtn;              ///< Button to clear all captured frames
     QPushButton* saveFramesBtn;         ///< Button to export frames to CSV
     QPushButton* loadFramesBtn;         ///< Button to import frames from CSV
@@ -135,7 +139,8 @@ private:
 
     TcpServer* server;                  ///< TCP server for broadcasting CAN frames
     TcpClient* client;                  ///< TCP client for connecting to a remote server
-    MessageModel* messageModel;         ///< Data model holding captured CAN frames
+    MessageModel* messageModel;                 ///< Source data model holding all captured CAN frames
+    FrameFilterProxyModel* filterProxyModel;    ///< Proxy between MessageModel and QTableView; filters rows by Dir/ID/Data
 
     // ========================================================================
     // Log Management
