@@ -1,10 +1,20 @@
+/**
+ * @file CANFrame.cpp
+ * @brief Implementation of the CANFrame class.
+ *
+ * Provides constructors, accessors, and binary serialization/deserialization
+ * for CAN frames transmitted over the network.
+ */
+
 #include "canframe.h"
 #include <QDataStream>
 #include <QDateTime>
 #include <QIODevice>
 
+// ============================================================================
+// Accessors
+// ============================================================================
 
-// Default constructor: initializes all fields to zero
 void CANFrame::setTimestamp(quint64 newTimestamp)
 {
     timestamp = newTimestamp;
@@ -30,45 +40,68 @@ quint8 CANFrame::getDataIndex(quint8 i) const
     return data[i];
 }
 
+// ============================================================================
+// Constructors
+// ============================================================================
+
+/**
+ * Default constructor: all fields zeroed out, data buffer cleared.
+ */
 CANFrame::CANFrame() : id(0), dlc(0), timestamp(0)
 {
-    memset(data, 0, sizeof(data));  // Clear data buffer
+    memset(data, 0, sizeof(data));
 }
 
-// Parameterized constructor: creates frame with specific ID and payload
-CANFrame::CANFrame(quint32 id, quint8 dlc, const quint8* data) : id(id), dlc(dlc), timestamp(QDateTime::currentMSecsSinceEpoch())
+/**
+ * Parameterized constructor: creates a frame with a specific ID and payload.
+ * The timestamp is set to the current system time in milliseconds since epoch.
+ * Only `dlc` bytes are copied from the input data pointer; the rest are zeroed.
+ */
+CANFrame::CANFrame(quint32 id, quint8 dlc, const quint8* data)
+    : id(id), dlc(dlc), timestamp(QDateTime::currentMSecsSinceEpoch())
 {
-    memset(this->data, 0, sizeof(this->data));  // Initialize to zero
+    memset(this->data, 0, sizeof(this->data));
     if (data && dlc <= 8) {
-        memcpy(this->data, data, dlc);  // Copy valid data bytes only
+        memcpy(this->data, data, dlc);
     }
 }
 
-// Serialize frame to QByteArray for network transmission
+// ============================================================================
+// Serialization / Deserialization
+// ============================================================================
+
+/**
+ * Serialize this frame into a 21-byte QByteArray.
+ *
+ * Layout: [id: 4B] [dlc: 1B] [data: 8B] [timestamp: 8B]
+ * Uses QDataStream with Qt_6_0 version for cross-platform consistency.
+ * All 8 data bytes are always written, regardless of DLC value.
+ */
 QByteArray CANFrame::serialize() const
 {
     QByteArray bytes;
     QDataStream stream(&bytes, QIODevice::WriteOnly);
-    stream.setVersion(QDataStream::Qt_6_0);  // Ensure compatibility
+    stream.setVersion(QDataStream::Qt_6_0);
 
-    // Write fields in fixed order (protocol contract)
     stream << id << dlc;
     for (int i = 0; i < 8; ++i) {
-        stream << data[i];  // Always send 8 bytes (padding for dlc < 8)
+        stream << data[i];
     }
     stream << timestamp;
 
     return bytes;
 }
 
-// Deserialize QByteArray back to CANFrame structure
+/**
+ * Deserialize a 21-byte QByteArray back into a CANFrame.
+ * Fields are read in the same order as serialize() writes them.
+ */
 CANFrame CANFrame::deserialize(const QByteArray& bytes)
 {
     CANFrame frame;
     QDataStream stream(bytes);
-    stream.setVersion(QDataStream::Qt_6_0);  // Match serialization version
+    stream.setVersion(QDataStream::Qt_6_0);
 
-    // Read fields in same order as serialize()
     stream >> frame.id >> frame.dlc;
     for (int i = 0; i < 8; ++i) {
         stream >> frame.data[i];
