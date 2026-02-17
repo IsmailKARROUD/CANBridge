@@ -36,7 +36,7 @@ int MessageModel::rowCount(const QModelIndex &parent) const
 int MessageModel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return 4;
+    return 5;  // Timestamp, Direction, ID, DLC, Data
 }
 
 /**
@@ -53,21 +53,23 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
     if (!index.isValid() || index.row() >= frames.size())
         return QVariant();
 
-    const CANFrame& frame = frames.at(index.row());
+    const FrameEntry& entry = frames.at(index.row());
 
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:  // Timestamp
-            return QDateTime::fromMSecsSinceEpoch(frame.getTimestamp()).toString("hh:mm:ss.zzz");
-        case 1:  // CAN ID in hex
-            return QString("0x%1").arg(frame.getId(), 3, 16, QChar('0')).toUpper();
-        case 2:  // Data Length Code
-            return frame.getDlc();
-        case 3:  // Data payload as hex string
+            return QDateTime::fromMSecsSinceEpoch(entry.frame.getTimestamp()).toString("hh:mm:ss.zzz");
+        case 1:  // Direction
+            return entry.isSent ? "TX" : "RX";
+        case 2:  // CAN ID in hex
+            return QString("0x%1").arg(entry.frame.getId(), 3, 16, QChar('0')).toUpper();
+        case 3:  // Data Length Code
+            return entry.frame.getDlc();
+        case 4:  // Data payload as hex string
         {
             QString dataStr;
-            for (int i = 0; i < frame.getDlc(); ++i) {
-                dataStr += QString("%1 ").arg(frame.getDataIndex(i), 2, 16, QChar('0')).toUpper();
+            for (int i = 0; i < entry.frame.getDlc(); ++i) {
+                dataStr += QString("%1 ").arg(entry.frame.getDataIndex(i), 2, 16, QChar('0')).toUpper();
             }
             return dataStr.trimmed();
         }
@@ -106,7 +108,7 @@ QVariant MessageModel::headerData(int section, Qt::Orientation orientation, int 
  * If the list exceeds MAX_FRAMES, the oldest frame (index 0) is removed
  * first to keep memory usage bounded.
  */
-void MessageModel::addFrame(const CANFrame& frame)
+void MessageModel::addFrame(const CANFrame& frame, bool isSent)
 {
     // Remove oldest frame if at capacity
     if (frames.size() >= MAX_FRAMES) {
@@ -117,7 +119,7 @@ void MessageModel::addFrame(const CANFrame& frame)
 
     // Append the new frame
     beginInsertRows(QModelIndex(), frames.size(), frames.size());
-    frames.append(frame);
+    frames.append({frame,isSent});
     endInsertRows();
     emit frameAdded();
 }

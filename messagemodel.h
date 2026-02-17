@@ -50,7 +50,7 @@ public slots:
      *
      * Emits frameAdded() after insertion so the UI can update counters.
      */
-    void addFrame(const CANFrame& frame);
+    void addFrame(const CANFrame& frame, bool isSent);
 
     /// Remove all frames from the model and reset the view.
     void clear();
@@ -60,8 +60,12 @@ signals:
     void frameAdded();
 
 private:
-    QList<CANFrame> frames;                     ///< Internal storage of captured frames
     static const int MAX_FRAMES = 10000;        ///< Upper limit to prevent memory exhaustion
+    struct FrameEntry {
+        CANFrame frame;
+        bool isSent;  // true = sent, false = received
+    };
+    QList<FrameEntry> frames;                   ///< Internal storage of captured frames
 };
 
 #endif // MESSAGEMODEL_H

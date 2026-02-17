@@ -74,16 +74,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Log outgoing frames and update the simulator status label
     connect(server, &TcpServer::frameSent, this, [this](const CANFrame& frame) {
+        messageModel->addFrame(frame, true);  // TX
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
         lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
         lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
-    // Add frames received by the server to the analyzer model
-    connect(server, &TcpServer::frameReceived, messageModel, &MessageModel::addFrame);
 
-    // Also log frames received by the server
+    // Add frames received by the server to the analyzer model and log frames received by the server
     connect(server, &TcpServer::frameReceived, this, [this](const CANFrame& frame) {
+        messageModel->addFrame(frame, false);  // RX
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
 
@@ -101,14 +101,15 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // Add frames received by the client to the analyzer model and log
-    connect(client, &TcpClient::frameReceived, messageModel, &MessageModel::addFrame);
     connect(client, &TcpClient::frameReceived, this, [this](const CANFrame& frame) {
+        messageModel->addFrame(frame, false);  // RX
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
 
     // Log frames sent by the client and update the simulator status label
     connect(client, &TcpClient::frameSent, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
+        messageModel->addFrame(frame, true);  // TX
         lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
         lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
@@ -755,7 +756,7 @@ void MainWindow::onClearMessages()
  * Export all captured frames to a CSV file.
  *
  * CSV format:
- *   Timestamp,ID,DLC,Data
+ *   Timestamp,Dir,ID,DLC,Data
  *   12:34:56.789,0x123,8,01 02 03 04 05 06 07 08
  */
 void MainWindow::onSaveFrames()
@@ -767,13 +768,13 @@ void MainWindow::onSaveFrames()
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
 
     QTextStream out(&file);
-    out << "Timestamp,ID,DLC,Data\n";  // CSV header
+    out << "Timestamp,Dir,ID,DLC,Data\n";  // CSV header
 
     // Write each frame as a CSV row
     for (int i = 0; i < messageModel->rowCount(); ++i) {
-        for (int j = 0; j < 4; ++j) {
+        for (int j = 0; j < 5; ++j) {
             out << messageModel->data(messageModel->index(i, j)).toString();
-            if (j < 3) out << ",";
+            if (j < 4) out << ",";
         }
         out << "\n";
     }
@@ -785,7 +786,7 @@ void MainWindow::onSaveFrames()
  * Import CAN frames from a CSV file and add them to the analyzer model.
  *
  * Expected CSV format:
- *   Timestamp,ID,DLC,Data
+ *   Timestamp,Dir,ID,DLC,Data
  *   (timestamp is ignored on import; a new timestamp is generated)
  *
  * Invalid rows are silently skipped.
@@ -806,20 +807,20 @@ void MainWindow::onLoadFrames()
         QString line = in.readLine();
         QStringList fields = line.split(',', Qt::SkipEmptyParts);
 
-        if (fields.size() < 4) continue;  // Skip malformed rows
+        if (fields.size() < 5) continue;  // Skip malformed rows
 
         // Parse CAN ID
         bool ok;
-        QString idText = fields[1].remove("0x", Qt::CaseInsensitive);
+        QString idText = fields[2].remove("0x", Qt::CaseInsensitive);
         quint32 id = idText.toUInt(&ok, 16);
         if (!ok || id > 0x1FFFFFFF) continue;
 
         // Parse DLC
-        quint8 dlc = fields[2].toUInt(&ok, 10);
+        quint8 dlc = fields[3].toUInt(&ok, 10);
         if (!ok) continue;
 
         // Parse data bytes
-        QStringList dataList = fields[3].split(' ', Qt::SkipEmptyParts);
+        QStringList dataList = fields[4].split(' ', Qt::SkipEmptyParts);
         if (dataList.size() > 8) continue;
 
         quint8 data[8] = {0};
@@ -830,7 +831,7 @@ void MainWindow::onLoadFrames()
         }
 
         CANFrame frame(id, dlc, data);
-        messageModel->addFrame(frame);
+        messageModel->addFrame(frame,fields[1]=="TX");
         frameCount++;
     }
 
