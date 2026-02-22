@@ -71,6 +71,7 @@ private slots:
 
     // --- Log tab ---
     void onLogFilterChanged(int index); ///< Update log display when filter selection changes
+    void onSaveLog();                   ///< Export the full log history to a .txt file
 
     // --- Status updates from backend ---
     void onServerClientConnected(const QString& address);   ///< Log when a client connects to server
@@ -121,6 +122,7 @@ private:
     // -- Log tab --
     QComboBox* logFilterCombo;          ///< Dropdown for log category filtering
     QTextEdit* logDisplay;              ///< Read-only text area for event log
+    QPushButton* saveLogBtn;            ///< Button to export the full log history to a file
 
     // -- Simulator tab --
     QVBoxLayout* framesLayout;              ///< Container for FrameWidget instances

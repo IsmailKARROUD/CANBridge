@@ -425,10 +425,19 @@ void MainWindow::setupLogTab()
     logDisplay->setPlaceholderText("Events will appear here...");
     mainLayout->addWidget(logDisplay);
 
+    // -- Bottom bar: Save Log button --
+    QHBoxLayout* logControlLayout = new QHBoxLayout();
+    saveLogBtn = new QPushButton("Save Log");
+    saveLogBtn->setMaximumWidth(120);
+    logControlLayout->addWidget(saveLogBtn);
+    logControlLayout->addStretch();
+    mainLayout->addLayout(logControlLayout);
+
     tabWidget->addTab(logTab, "Log");
 
     connect(logFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onLogFilterChanged);
+    connect(saveLogBtn, &QPushButton::clicked, this, &MainWindow::onSaveLog);
 }
 
 // ============================================================================
@@ -1068,6 +1077,52 @@ void MainWindow::onLoadFrames()
 // ============================================================================
 // Log Management
 // ============================================================================
+
+/**
+ * Export the complete log history to a plain-text file.
+ *
+ * Saves ALL log entries regardless of the active category filter, so
+ * the output file is always a full record of the session. Each line
+ * follows the same format used in the display:
+ *   [HH:MM:SS] [Category] Message
+ *
+ * The file is written newest-first (same order as logHistory).
+ */
+void MainWindow::onSaveLog()
+{
+    if (logHistory.isEmpty()) {
+        QMessageBox::information(this, "Save Log", "No log entries to save.");
+        return;
+    }
+
+    QString filename = QFileDialog::getSaveFileName(
+        this, "Save Log", "", "Text Files (*.txt);;All Files (*)");
+    if (filename.isEmpty()) return;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Save Log",
+                             "Could not open file for writing:\n" + filename);
+        return;
+    }
+
+    QTextStream out(&file);
+
+    // Write a session header for context
+    out << "CANBridge Session Log\n";
+    out << "Exported: " << QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss") << "\n";
+    out << QString(50, '-') << "\n";
+
+    // Write every entry in logHistory (full history, not filtered)
+    for (const LogEntry& entry : logHistory) {
+        out << QString("[%1] [%2] %3\n")
+                   .arg(entry.timestamp)
+                   .arg(entry.category)
+                   .arg(entry.message);
+    }
+
+    addLogEvent(QString("Log saved to %1").arg(filename), "Server");
+}
 
 /**
  * Handle log filter dropdown changes.
