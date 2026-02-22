@@ -6,7 +6,7 @@
  * for CAN frames transmitted over the network.
  */
 
-#include "canframe.h"
+#include "CANFrame.h"
 #include <QDataStream>
 #include <QDateTime>
 #include <QIODevice>

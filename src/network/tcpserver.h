@@ -18,7 +18,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <QList>
-#include "canframe.h"
+#include "CANFrame.h"
 
 /**
  * @class TcpServer

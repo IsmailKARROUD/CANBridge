@@ -17,20 +17,22 @@ qt_standard_project_setup()
 # Define the executable target with all source files
 qt_add_executable(CANBridge
     WIN32 MACOSX_BUNDLE
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    canframe.h
-    canframe.cpp
-    tcpserver.h
-    tcpserver.cpp
-    messagemodel.h
-    messagemodel.cpp
-    aboutdialog.h
-    aboutdialog.cpp
-    mainwindow.ui
-    tcpclient.h tcpclient.cpp
-    framefilterproxymodel.h framefilterproxymodel.cpp
+    src/main.cpp
+    src/core/CANFrame.h
+    src/core/CANFrame.cpp
+    src/network/tcpserver.h
+    src/network/tcpserver.cpp
+    src/network/tcpclient.h
+    src/network/tcpclient.cpp
+    src/models/messagemodel.h
+    src/models/messagemodel.cpp
+    src/models/framefilterproxymodel.h
+    src/models/framefilterproxymodel.cpp
+    src/ui/mainwindow.h
+    src/ui/mainwindow.cpp
+    src/ui/mainwindow.ui
+    src/ui/aboutdialog.h
+    src/ui/aboutdialog.cpp
 )
 
 # Link against Qt libraries
@@ -75,5 +77,11 @@ configure_file(
     "${CMAKE_CURRENT_BINARY_DIR}/version.h"
 )
 
-# Add build directory to include path so source files can #include "version.h"
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+# Add source subdirectories and build directory to include path
+include_directories(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/core"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/network"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/models"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/ui"
+    "${CMAKE_CURRENT_BINARY_DIR}"
+)

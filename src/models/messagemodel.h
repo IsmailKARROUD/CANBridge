@@ -15,7 +15,7 @@
 
 #include <QAbstractTableModel>
 #include <QList>
-#include "canframe.h"
+#include "CANFrame.h"
 
 /**
  * @class MessageModel

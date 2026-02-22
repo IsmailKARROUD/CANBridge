@@ -1,16 +1,25 @@
-# Qt build artifacts
+# Build directories
 build*/
-*.pro.user
+cmake-build-*/
+
+# Qt Creator user files
+*.user
+*.user.*
+CMakeLists.txt.user*
+.qtcreator/
+
+# Qt generated files
 *.autosave
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
 
-# CMake
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
+# macOS
+.DS_Store
+**/.DS_Store
 
-# Compiled files
+# Compiled binaries
+*.app
+*.exe
 *.o
 *.obj
-*.exe
-moc_*
-ui_*.h
