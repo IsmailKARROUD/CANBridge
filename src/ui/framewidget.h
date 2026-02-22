@@ -8,7 +8,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <functional>
-#include "../core/canframe.h"
+#include "../core/CANFrame.h"
 
 /**
  * @class FrameWidget

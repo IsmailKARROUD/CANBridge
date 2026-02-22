@@ -521,14 +521,14 @@ void MainWindow::setupSimulatorTab()
     });
 
     connect(sendAllBtn, &QPushButton::clicked, this, [this]() {
-        for (auto* widget : frameWidgets) {
+        for (auto* widget : std::as_const(frameWidgets)) {
             if(widget->getSendButton()->isEnabled() && widget->getSendButton()->isVisible()) widget->getSendButton()->click();
         }
         addLogEvent(QString("Sent all frames (%1 frames)").arg(frameWidgets.size()), "Frame");
     });
 
     connect(stopAllBtn, &QPushButton::clicked, this, [this]() {
-        for (auto* widget : frameWidgets) {
+        for (auto* widget : std::as_const(frameWidgets)) {
             if(widget->getStopButton()->isEnabled() && widget->getStopButton()->isVisible()) widget->getStopButton()->click();
         }
         addLogEvent("Stopped all periodic transmissions", "Frame");
@@ -674,7 +674,7 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
 void MainWindow::updateHiddenFramesButton()
 {
     int hiddenCount = 0;
-    for (auto* widget : frameWidgets) {
+    for (auto* widget : std::as_const(frameWidgets)) {
         if (!widget->isVisible()) {
             hiddenCount++;
         }
