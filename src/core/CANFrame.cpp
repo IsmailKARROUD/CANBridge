@@ -30,6 +30,11 @@ quint32 CANFrame::getId() const
     return id;
 }
 
+void CANFrame::setID(quint32 newId)
+{
+    id = newId;
+}
+
 quint8 CANFrame::getDlc() const
 {
     return dlc;

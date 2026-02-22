@@ -24,10 +24,16 @@
 #include <QLabel>
 #include <QTextEdit>
 #include <QComboBox>
+#include <QVBoxLayout>
+#include <QMap>
+#include <QScrollArea>
+#include <QMessageBox>
+
 #include "tcpserver.h"
 #include "tcpclient.h"
 #include "messagemodel.h"
 #include "framefilterproxymodel.h"
+#include "framewidget.h"
 
 /**
  * @class MainWindow
@@ -51,9 +57,12 @@ private slots:
     void onDisconnect();                ///< Disconnect from the remote server
 
     // --- Simulator tab ---
-    void onSendFrame();                 ///< Parse UI inputs and send a single CAN frame
-    void onSendPeriodic();              ///< Start periodic transmission of a CAN frame
-    void onStopPeriodic();              ///< Stop all periodic transmissions
+    void addFrameWidget(uint32_t defaultId = 0x100);
+    bool isCanIdDuplicate(uint32_t canId, FrameWidget* excludeWidget = nullptr);
+    void onFrameSendOnce(const CANFrame& frame);
+    void onSendFramePeriodic(const CANFrame& frame, int intervalMs);
+    void onStopFramePeriodic(const CANFrame& frame);
+    void onFrameRemove(uint32_t canId);
 
     // --- Analyzer tab ---
     void onClearMessages();             ///< Clear all captured frames from the model
@@ -114,14 +123,13 @@ private:
     QTextEdit* logDisplay;              ///< Read-only text area for event log
 
     // -- Simulator tab --
-    QLineEdit* canIdEdit;               ///< CAN ID input (hex format, e.g., "0x123")
-    QSpinBox* dlcSpin;                  ///< Data Length Code selector (0-8)
-    QLineEdit* dataEdit;                ///< Data bytes input (space-separated hex)
-    QPushButton* sendOnceBtn;           ///< Button to send a single frame
-    QSpinBox* intervalSpin;             ///< Periodic interval selector in milliseconds
-    QPushButton* sendPeriodicBtn;       ///< Button to start periodic transmission
-    QPushButton* stopPeriodicBtn;       ///< Button to stop periodic transmission
-    QLabel* lastFrameStatusLabel;       ///< Status of the last frame send operation
+    QVBoxLayout* framesLayout;              ///< Container for FrameWidget instances
+    QMap<uint32_t, FrameWidget*> frameWidgets;  ///< Active frame widgets keyed by CAN ID
+    QPushButton* addFrameBtn;               ///< Button to add a new frame widget
+    QPushButton* sendAllBtn;               ///< Button to send all frames once
+    QPushButton* stopAllBtn;               ///< Button to stop all periodic transmissions
+    QLabel* lastFrameStatusLabel;          ///< Status label showing the last sent frame result
+    // Note: addFrameWidget() and isCanIdDuplicate() are declared in private slots: above
 
     // -- Analyzer tab --
     QTableView* messageTable;           ///< Table view bound to proxy model

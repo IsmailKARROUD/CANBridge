@@ -68,6 +68,7 @@ public:
     void setTimestamp(quint64 newTimestamp);
     quint64 getTimestamp() const;
     quint32 getId() const;
+    void setID(quint32 newId) ;
     quint8 getDlc() const;
 
     /**

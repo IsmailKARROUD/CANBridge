@@ -61,6 +61,17 @@ public:
      */
     void addPeriodicFrame(const CANFrame& frame, int intervalMs);
 
+    /**
+     * @brief Remove a single periodic frame identified by its CAN ID.
+     *
+     * Searches the periodic frame list for an entry whose CAN ID matches
+     * @p canId and removes it. If no more periodic frames remain after the
+     * removal, the periodic timer is stopped to avoid unnecessary CPU wake-ups.
+     *
+     * @param canId The CAN identifier of the frame to stop transmitting.
+     */
+    void removePeriodicFrame(uint32_t canId);
+
     /// Remove all periodic frames and stop the periodic timer.
     void clearPeriodicFrames();
 

@@ -435,111 +435,237 @@ void MainWindow::setupLogTab()
 // ============================================================================
 
 /**
- * Build the Simulator tab with:
- *  - Message configuration: CAN ID (hex), DLC (0-8), data bytes (hex)
- *  - Transmission controls: Send Once, periodic interval, Start/Stop Periodic
- *  - Status display showing the last send operation result
+ * Build the Simulator tab with multi-frame support:
+ *  - Add Frame button to create new frame widgets
+ *  - Scrollable area containing individual frame widgets
+ *  - Global controls: Send All, Stop All
  */
 void MainWindow::setupSimulatorTab()
 {
     QWidget* simTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(simTab);
 
-    // -- Message configuration group --
-    QGroupBox* msgGroup = new QGroupBox("Message Configuration");
-    QGridLayout* msgLayout = new QGridLayout();
+    // -- Add Frame button at top --
+    QHBoxLayout* topLayout = new QHBoxLayout();
+    addFrameBtn = new QPushButton("➕ Add Frame");
+    addFrameBtn->setMaximumWidth(150);
+    topLayout->addWidget(addFrameBtn);
+    topLayout->addStretch();
+    mainLayout->addLayout(topLayout);
 
-    msgLayout->addWidget(new QLabel("CAN ID (hex):"), 0, 0);
-    canIdEdit = new QLineEdit("0x123");         // Default CAN ID
-    msgLayout->addWidget(canIdEdit, 0, 1);
+    // -- Scrollable area for frame widgets --
+    QScrollArea* scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    msgLayout->addWidget(new QLabel("DLC:"), 1, 0);
-    dlcSpin = new QSpinBox();
-    dlcSpin->setRange(0, 8);                    // CAN DLC range
-    dlcSpin->setValue(8);
-    msgLayout->addWidget(dlcSpin, 1, 1);
+    QWidget* scrollWidget = new QWidget();
+    framesLayout = new QVBoxLayout(scrollWidget);
+    framesLayout->setSpacing(10);
+    framesLayout->addStretch();  // Push frames to top
 
-    msgLayout->addWidget(new QLabel("Data (hex):"), 2, 0);
-    dataEdit = new QLineEdit("01 02 03 04 05 06 07 08");  // Default data bytes
-    msgLayout->addWidget(dataEdit, 2, 1);
+    scrollArea->setWidget(scrollWidget);
+    scrollArea->setMinimumHeight(300);
+    mainLayout->addWidget(scrollArea);
 
-    msgGroup->setLayout(msgLayout);
-    mainLayout->addWidget(msgGroup);
+    // -- Global controls at bottom --
+    QHBoxLayout* globalLayout = new QHBoxLayout();
+    sendAllBtn = new QPushButton("📤 Send All Once");
+    stopAllBtn = new QPushButton("⏹ Stop All Periodic");
+    sendAllBtn->setMaximumWidth(150);
+    stopAllBtn->setMaximumWidth(150);
 
-    // -- Transmission controls group --
-    QGroupBox* txGroup = new QGroupBox("Transmission");
-    QHBoxLayout* txLayout = new QHBoxLayout();
+    globalLayout->addWidget(sendAllBtn);
+    globalLayout->addWidget(stopAllBtn);
+    globalLayout->addStretch();
+    mainLayout->addLayout(globalLayout);
 
-    sendOnceBtn = new QPushButton("Send Once");
-    txLayout->addWidget(sendOnceBtn);
-
-    txLayout->addWidget(new QLabel("Interval (ms):"));
-    intervalSpin = new QSpinBox();
-    intervalSpin->setRange(10, 10000);          // 10ms to 10s range
-    intervalSpin->setValue(100);                 // Default 100ms interval
-    txLayout->addWidget(intervalSpin);
-
-    sendPeriodicBtn = new QPushButton("Start Periodic");
-    stopPeriodicBtn = new QPushButton("Stop Periodic");
-    stopPeriodicBtn->setEnabled(false);         // Disabled until periodic starts
-    txLayout->addWidget(sendPeriodicBtn);
-    txLayout->addWidget(stopPeriodicBtn);
-    txLayout->addStretch();
-
-    txGroup->setLayout(txLayout);
-    mainLayout->addWidget(txGroup);
-
-    // -- Last action status --
-    QHBoxLayout* statusLayout = new QHBoxLayout();
-    statusLayout->addWidget(new QLabel("Last action:"));
-    lastFrameStatusLabel = new QLabel("No frames sent yet");
+    // -- Status label: shows result of the most recent send operation --
+    // Updated by the server/client frameSent signal callbacks in the constructor.
+    lastFrameStatusLabel = new QLabel("");
     lastFrameStatusLabel->setStyleSheet("QLabel { color: gray; }");
-    statusLayout->addWidget(lastFrameStatusLabel);
-    statusLayout->addStretch();
-    mainLayout->addLayout(statusLayout);
+    mainLayout->addWidget(lastFrameStatusLabel);
 
-    mainLayout->addStretch();
     tabWidget->addTab(simTab, "Simulator");
 
-    // Wire button signals
-    connect(sendOnceBtn, &QPushButton::clicked, this, &MainWindow::onSendFrame);
-    connect(sendPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onSendPeriodic);
-    connect(stopPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onStopPeriodic);
+    // Add first frame by default
+    addFrameWidget(0x100);
 
-    // Auto-format hex data input with spaces (e.g., "0102" becomes "01 02")
-    connect(dataEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
-        // Block signals to prevent triggering this slot recursively when we call setText
-        dataEdit->blockSignals(true);
-
-        // Remember current cursor position before formatting
-        int cursorPos = dataEdit->cursorPosition();
-
-        // Format the text: remove non-hex chars, uppercase, add space every 2 chars
-        QString formatted = formatHexWithSpaces(text);
-
-        // Calculate how many spaces existed before the cursor in original text
-        int spacesBefore = text.first(cursorPos).count(' ');
-
-        // Calculate adjusted cursor position
-        int adjustedPos = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
-        int spacesAfter = formatted.first(adjustedPos).count(' ');
-
-        // Apply formatted text
-        dataEdit->setText(formatted);
-
-        // Restore cursor position, adjusted for any spaces that were added/removed
-        dataEdit->setCursorPosition(cursorPos + (spacesAfter - spacesBefore));
-
-        // Re-enable signals
-        dataEdit->blockSignals(false);
-
-        // Auto-update DLC based on number of bytes (each byte = 2 hex chars)
-        // Remove spaces to count actual hex characters, then divide by 2
-        QString cleaned = formatted;
-        cleaned.remove(' ');
-        int byteCount = (cleaned.length() + 1) / 2;
-        dlcSpin->setValue(qMin(byteCount, 8));  // Max DLC is 8
+    // -- Wire global button signals --
+    connect(addFrameBtn, &QPushButton::clicked, this, [this]() {
+        // Find next available ID
+        uint32_t nextId = 0x100;
+        while (frameWidgets.contains(nextId)) {
+            nextId++;
+            if (nextId > 0x7FF) nextId = 0x100;  // Wrap around standard CAN IDs
+        }
+        addFrameWidget(nextId);
     });
+
+    connect(sendAllBtn, &QPushButton::clicked, this, [this]() {
+        for (auto* widget : frameWidgets) {
+            onFrameSendOnce(widget->getFrame());
+        }
+        addLogEvent(QString("Sent all frames (%1 frames)").arg(frameWidgets.size()), "Frame");
+    });
+
+    connect(stopAllBtn, &QPushButton::clicked, this, [this]() {
+        for (auto* widget : frameWidgets) {
+            if (widget->isPeriodicEnabled()) {
+                widget->setPeriodicEnabled(false);
+            }
+        }
+        server->clearPeriodicFrames();
+        client->clearPeriodicFrames();
+        addLogEvent("Stopped all periodic transmissions", "Frame");
+    });
+}
+
+// ============================================================================
+// Multi-Frame Simulator Helpers
+// ============================================================================
+
+/**
+ * Add a new FrameWidget to the simulator with the specified default CAN ID.
+ * Automatically finds a unique ID if the default is already taken.
+ */
+void MainWindow::addFrameWidget(uint32_t defaultId)
+{
+    // Find unique ID if default is taken
+    uint32_t canId = defaultId;
+    while (frameWidgets.contains(canId)) {
+        canId++;
+        if (canId > 0x7FF) canId = 0x100;  // Wrap around
+    }
+
+    FrameWidget* widget = new FrameWidget(canId);
+
+    // Inject a live connection checker so the widget can verify that a
+    // server is listening or a client is connected at the moment Send is
+    // clicked — without coupling FrameWidget to TcpServer or TcpClient.
+    widget->setConnectionChecker([this]() {
+        return server->isListening() || client->isConnected();
+    });
+
+    // Insert before the stretch spacer
+    framesLayout->insertWidget(framesLayout->count() - 1, widget);
+    frameWidgets[canId] = widget;
+
+    // Connect frame widget signals
+    connect(widget, &FrameWidget::sendOnceClicked, this, &MainWindow::onFrameSendOnce);
+    connect(widget, &FrameWidget::onSendFramePeriodicClicked, this, &MainWindow::onSendFramePeriodic);
+    connect(widget, &FrameWidget::onStopFramePeriodicClicked, this, &MainWindow::onStopFramePeriodic);
+    connect(widget, &FrameWidget::removeClicked, this, &MainWindow::onFrameRemove);
+
+
+    connect(widget, &FrameWidget::hideClicked, this, [widget]() {
+        widget->setVisible(false);
+    });
+
+    connect(widget, &FrameWidget::canIdChanged, this,
+            [this](uint32_t oldId, uint32_t newId) {
+                // Check for duplicate
+                if (isCanIdDuplicate(newId, frameWidgets[oldId])) {
+                    QMessageBox::warning(this, "Duplicate CAN ID",
+                                         QString("CAN ID 0x%1 is already in use!\n\nPlease choose a different ID.")
+                                             .arg(newId, 0, 16));
+
+                    // Revert the change in the widget
+                    auto widget = frameWidgets[oldId];
+                    CANFrame frame = widget->getFrame();
+                    frame.setID(oldId);   // Restore old ID
+                    widget->setFrame(frame);
+                    return;
+                }
+
+                // Update map
+                auto widget = frameWidgets[oldId];
+                frameWidgets.remove(oldId);
+                frameWidgets[newId] = widget;
+
+                addLogEvent(QString("Frame ID changed: 0x%1 → 0x%2")
+                                .arg(oldId, 0, 16).arg(newId, 0, 16), "Frame");
+            });
+
+    addLogEvent(QString("Added frame with ID: 0x%1").arg(canId, 0, 16), "Frame");
+}
+
+/**
+ * Check if a CAN ID is already in use by another frame widget.
+ */
+bool MainWindow::isCanIdDuplicate(uint32_t canId, FrameWidget* excludeWidget)
+{
+    for (auto it = frameWidgets.begin(); it != frameWidgets.end(); ++it) {
+        if (it.value() != excludeWidget && it.key() == canId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Send a single frame via server (if running) or client (if connected).
+ */
+void MainWindow::onFrameSendOnce(const CANFrame& frame)
+{
+    if (!server->isListening() && !client->isConnected()) {
+        addLogEvent("Error: Not connected", "Frame");
+        return;
+    }
+
+    if (server->isListening()) {
+        server->sendFrame(frame);
+    } else if (client->isConnected()) {
+        client->sendFrame(frame);
+    }
+}
+
+/**
+ * Handle periodic transmission state changes for a specific frame.
+ */
+void MainWindow::onSendFramePeriodic(const CANFrame& frame, int intervalMs)
+{
+
+
+        // Start periodic transmission
+        if (server->isListening()) {
+            server->addPeriodicFrame(frame, intervalMs);
+            addLogEvent(QString("Started periodic: ID 0x%1, %2ms")
+                            .arg(frame.getId(), 0, 16).arg(intervalMs), "Frame");
+        } else if (client->isConnected()) {
+            client->addPeriodicFrame(frame, intervalMs);
+            addLogEvent(QString("Started periodic: ID 0x%1, %2ms")
+                            .arg(frame.getId(), 0, 16).arg(intervalMs), "Frame");
+        }
+}
+
+void MainWindow::onStopFramePeriodic(const CANFrame& frame) {
+        // Stop periodic transmission
+        if (server->isListening()) {
+            server->removePeriodicFrame(frame.getId());
+        } else if (client->isConnected()) {
+            client->removePeriodicFrame(frame.getId());
+        }
+        addLogEvent(QString("Stopped periodic: ID 0x%1").arg(frame.getId(), 0, 16), "Frame");
+    }
+
+/**
+ * Remove a frame widget from the simulator.
+ */
+void MainWindow::onFrameRemove(uint32_t canId)
+{
+    auto it = frameWidgets.find(canId);
+    if (it != frameWidgets.end()) {
+        // Stop periodic if active
+        if ((*it)->isPeriodicEnabled()) {
+            server->removePeriodicFrame(canId);
+            client->removePeriodicFrame(canId);
+        }
+
+        (*it)->deleteLater();
+        frameWidgets.erase(it);
+
+        addLogEvent(QString("Removed frame ID: 0x%1").arg(canId, 0, 16), "Frame");
+    }
 }
 
 // ============================================================================
@@ -744,140 +870,6 @@ void MainWindow::onClientDisconnected()
 void MainWindow::onServerClientConnected(const QString& address)
 {
     addLogEvent(QString("Client connected: %1").arg(address), "Server");
-}
-
-// ============================================================================
-// Simulator Handlers
-// ============================================================================
-
-/**
- * Parse the CAN ID, DLC, and data bytes from the simulator UI inputs,
- * construct a CANFrame, and send it via server (if running) or client (if connected).
- *
- * Validates:
- *  - Server is running or client is connected
- *  - CAN ID is valid hex and within 29-bit range (0x1FFFFFFF max)
- *  - Data bytes are valid hex and at most 8 bytes
- */
-void MainWindow::onSendFrame()
-{
-    // Require an active connection (server or client)
-    if (!server->isListening() && !client->isConnected()) {
-        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
-        return;
-    }
-
-    // Parse CAN ID from hex input
-    bool ok;
-    QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
-    quint32 id = idText.toUInt(&ok, 16);
-    if (!ok || id > 0x1FFFFFFF) {  // 29-bit max for extended CAN ID
-        addLogEvent("Error: Invalid CAN ID", "Frame");
-        lastFrameStatusLabel->setText("✗ Error: Invalid CAN ID");
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
-        return;
-    }
-
-    // Parse data bytes from space-separated hex string
-    QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    if (dataList.size() > 8) {
-        addLogEvent("Error: Max 8 data bytes", "Frame");
-        return;
-    }
-
-    quint8 data[8] = {0};
-    for (int i = 0; i < dataList.size(); ++i) {
-        quint32 byte = dataList[i].toUInt(&ok, 16);
-        if (!ok || byte > 0xFF) {
-            addLogEvent("Error: Invalid data byte", "Frame");
-            return;
-        }
-        data[i] = static_cast<quint8>(byte);
-    }
-
-    // Build and send the frame via the active channel
-    CANFrame frame(id, dlcSpin->value(), data);
-    if (server->isListening()) {
-        server->sendFrame(frame);
-    } else if (client->isConnected()) {
-        client->sendFrame(frame);
-    } else {
-        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
-    }
-}
-
-/**
- * Parse a CAN frame from the UI and start periodic transmission.
- * Uses the server's periodic timer if the server is running, otherwise
- * sends a single frame via the client (periodic client transmission not yet supported).
- */
-void MainWindow::onSendPeriodic()
-{
-    // Require an active connection
-    if (!server->isListening() && !client->isConnected()) {
-        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
-        return;
-    }
-
-    // Parse CAN ID
-    bool ok;
-    QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
-    quint32 id = idText.toUInt(&ok, 16);
-    if (!ok || id > 0x1FFFFFFF) {
-        addLogEvent("Error: Invalid CAN ID", "Frame");
-        return;
-    }
-
-    // Parse data bytes
-    QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    if (dataList.size() > 8) {
-        addLogEvent("Error: Max 8 data bytes", "Frame");
-        return;
-    }
-
-    quint8 data[8] = {0};
-    for (int i = 0; i < dataList.size(); ++i) {
-        quint32 byte = dataList[i].toUInt(&ok, 16);
-        if (!ok || byte > 0xFF) {
-            addLogEvent("Error: Invalid data byte", "Frame");
-            return;
-        }
-        data[i] = static_cast<quint8>(byte);
-    }
-
-    CANFrame frame(id, dlcSpin->value(), data);
-
-    if (server->isListening()) {
-        server->addPeriodicFrame(frame, intervalSpin->value());
-    } else if (client->isConnected()) {
-        client->addPeriodicFrame(frame, intervalSpin->value());
-    } else {
-        lastFrameStatusLabel->setText("✗ Error: Server not running and client are not connected");
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: red; }");
-    }
-
-    // Update button states
-    sendPeriodicBtn->setEnabled(false);
-    stopPeriodicBtn->setEnabled(true);
-
-    addLogEvent(QString("Started periodic transmission (ID: 0x%1, Interval: %2ms)")
-                    .arg(id, 0, 16).arg(intervalSpin->value()), "Frame");
-}
-
-/**
- * Stop all periodic frame transmissions and reset button states.
- */
-void MainWindow::onStopPeriodic()
-{
-    server->clearPeriodicFrames();
-    client->clearPeriodicFrames();
-    sendPeriodicBtn->setEnabled(true);
-    stopPeriodicBtn->setEnabled(false);
-
-    addLogEvent("Stopped periodic transmission", "Frame");
 }
 
 // ============================================================================

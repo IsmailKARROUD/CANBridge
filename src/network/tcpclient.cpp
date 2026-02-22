@@ -198,6 +198,31 @@ void TcpClient::addPeriodicFrame(const CANFrame& frame, int intervalMs)
 }
 
 /**
+ * Remove a single periodic frame by CAN ID.
+ *
+ * Iterates the periodic frame list and erases the first entry whose frame ID
+ * matches @p canId. Using an index-based loop (rather than a range-for) allows
+ * safe in-place removal without invalidating the iterator.
+ *
+ * If the list is empty after removal, the timer is stopped so it no longer
+ * wakes the CPU every 10 ms when there is nothing left to send.
+ */
+void TcpClient::removePeriodicFrame(uint32_t canId)
+{
+    for (int i = 0; i < periodicFrames.size(); ++i) {
+        if (periodicFrames[i].frame.getId() == canId) {
+            periodicFrames.removeAt(i);
+            break;  // CAN IDs are unique in the list — stop after first match
+        }
+    }
+
+    // Stop the timer only when no periodic frames remain
+    if (periodicFrames.isEmpty()) {
+        periodicTimer->stop();
+    }
+}
+
+/**
  * Remove all periodic frames and stop the periodic timer.
  */
 void TcpClient::clearPeriodicFrames()
