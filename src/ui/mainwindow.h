@@ -61,7 +61,7 @@ private slots:
     bool isCanIdDuplicate(uint32_t canId, FrameWidget* excludeWidget = nullptr);
     void onFrameSendOnce(const CANFrame& frame);
     void onSendFramePeriodic(const CANFrame& frame, int intervalMs);
-    void onStopFramePeriodic(const CANFrame& frame);
+    void onStopFramePeriodic(const int& frame);
     void onFrameRemove(uint32_t canId);
 
     // --- Analyzer tab ---

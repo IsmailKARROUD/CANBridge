@@ -37,7 +37,7 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     controlsLayout->addWidget(periodicCheckBox);
 
     intervalSpin = new QSpinBox();
-    intervalSpin->setRange(10, 10000);
+    intervalSpin->setRange(1, 100000);
     intervalSpin->setValue(100);
     intervalSpin->setSuffix(" ms");
     intervalSpin->setMaximumWidth(100);
@@ -47,10 +47,12 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     // Action buttons
     sendBtn = new QPushButton("Send");
     sendBtn->setMaximumWidth(80);
+    sendBtn->setVisible(true);
     controlsLayout->addWidget(sendBtn);
 
     stopBtn = new QPushButton("Stop");
     stopBtn->setMaximumWidth(80);
+    stopBtn->setVisible(false);
     controlsLayout->addWidget(stopBtn);
 
     hideBtn = new QPushButton("Hide");
@@ -75,7 +77,7 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     // Connect signals
-    connect(sendBtn, &QPushButton::clicked, this, &FrameWidget::onSendOnce);
+    connect(sendBtn, &QPushButton::clicked, this, &FrameWidget::onSend);
     connect(stopBtn, &QPushButton::clicked, this, &FrameWidget::onStopFramePeriodic);
     connect(hideBtn, &QPushButton::clicked, this, &FrameWidget::onHide);
     connect(removeBtn, &QPushButton::clicked, this, &FrameWidget::onRemove);
@@ -159,12 +161,15 @@ bool FrameWidget::checkConnection()
     return true;
 }
 
-void FrameWidget::onSendOnce()
+void FrameWidget::onSend()
 {
     // --- Check connection before anything else ---
     // Queries the live checker lambda provided by MainWindow; bails out
     // with an error on the status label if no server/client is active.
     if (!checkConnection()) return;
+
+    sendBtn->setEnabled(false);
+    stopBtn->setEnabled(false);
 
     // --- Validate CAN ID ---
     bool ok;
@@ -173,6 +178,9 @@ void FrameWidget::onSendOnce()
     if (!ok || id > 0x1FFFFFFF) {   // 29-bit extended CAN ID max
         statusLabel->setText("✗ Error: Invalid CAN ID (max 0x1FFFFFFF)");
         statusLabel->setStyleSheet("QLabel { color: red; }");
+        sendBtn->setVisible(true);
+        stopBtn->setVisible(false);
+        sendBtn->setEnabled(true);
         return;
     }
 
@@ -181,6 +189,9 @@ void FrameWidget::onSendOnce()
     if (dataList.size() > 8) {
         statusLabel->setText("✗ Error: Max 8 data bytes");
         statusLabel->setStyleSheet("QLabel { color: red; }");
+        sendBtn->setVisible(true);
+        stopBtn->setVisible(false);
+        sendBtn->setEnabled(true);
         return;
     }
 
@@ -190,6 +201,9 @@ void FrameWidget::onSendOnce()
         if (!ok || byte > 0xFF) {
             statusLabel->setText(QString("✗ Error: Invalid byte at position %1").arg(i + 1));
             statusLabel->setStyleSheet("QLabel { color: red; }");
+            sendBtn->setVisible(true);
+            stopBtn->setVisible(false);
+            sendBtn->setEnabled(true);
             return;
         }
         data[i] = static_cast<quint8>(byte);
@@ -199,21 +213,29 @@ void FrameWidget::onSendOnce()
     // Connection check (server running / client connected) is handled
 
     CANFrame frame(id, dlcSpin->value(), data);
-    if(!m_checkPeriodicSendFrame) {
-        // by MainWindow::onFrameSendOnce() after receiving this signal.
-        emit sendOnceClicked(frame);
-
-        statusLabel->setText(QString("✓ Sent ID: 0x%1").arg(id, 0, 16));
-        statusLabel->setStyleSheet("QLabel { color: green; }");
-    } else {
+    if(periodicCheckBox->isChecked()) {
         // by MainWindow::onSendFramePeriodic() after receiving this signal.
         emit onSendFramePeriodicClicked(frame, intervalSpin->value());
+        sendBtn->setVisible(false);
+        stopBtn->setVisible(true);
+        stopBtn->setEnabled(true);
         statusLabel->setText(QString("✓ Sending ID: 0x%1").arg(id, 0, 16));
+        statusLabel->setStyleSheet("QLabel { color: green; }");
+    }else {
+        // by MainWindow::onFrameSendOnce() after receiving this signal.
+        emit sendOnceClicked(frame);
+        sendBtn->setVisible(true);
+        stopBtn->setVisible(false);
+        sendBtn->setEnabled(true);
+        statusLabel->setText(QString("✓ Sent ID: 0x%1").arg(id, 0, 16));
         statusLabel->setStyleSheet("QLabel { color: green; }");
     }
 
 }
 void FrameWidget::onStopFramePeriodic(){
+
+    sendBtn->setEnabled(false);
+    stopBtn->setEnabled(false);
     // --- Validate CAN ID ---
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
@@ -221,39 +243,21 @@ void FrameWidget::onStopFramePeriodic(){
     if (!ok || id > 0x1FFFFFFF) {   // 29-bit extended CAN ID max
         statusLabel->setText("✗ Error: Invalid CAN ID (max 0x1FFFFFFF)");
         statusLabel->setStyleSheet("QLabel { color: red; }");
+        stopBtn->setEnabled(true);
         return;
     }
 
-    // --- Validate data bytes ---
-    QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    if (dataList.size() > 8) {
-        statusLabel->setText("✗ Error: Max 8 data bytes");
-        statusLabel->setStyleSheet("QLabel { color: red; }");
-        return;
-    }
-
-    quint8 data[8] = {0};
-    for (int i = 0; i < dataList.size(); ++i) {
-        quint32 byte = dataList[i].toUInt(&ok, 16);
-        if (!ok || byte > 0xFF) {
-            statusLabel->setText(QString("✗ Error: Invalid byte at position %1").arg(i + 1));
-            statusLabel->setStyleSheet("QLabel { color: red; }");
-            return;
-        }
-        data[i] = static_cast<quint8>(byte);
-    }
-
-    CANFrame frame(id, dlcSpin->value(), data);
-
-    emit onStopFramePeriodicClicked(frame);
+    emit onStopFramePeriodicClicked(id);
+    sendBtn->setEnabled(true);
+    stopBtn->setVisible(false);
+    sendBtn->setVisible(true);
     statusLabel->setText(QString("✓ Stopped ID: 0x%1").arg(id, 0, 16));
     statusLabel->setStyleSheet("QLabel { color: grey; }");
 
 }
-void FrameWidget::onPeriodicToggled(bool checked)
+void FrameWidget::onPeriodicToggled()
 {
-    m_checkPeriodicSendFrame = checked;
-    if (checked) {
+    if (periodicCheckBox->isChecked()) {
         statusLabel->setText(QString("⟳ Periodic active (%1 ms)").arg(intervalSpin->value()));
         statusLabel->setStyleSheet("QLabel { color: blue; }");
     } else {

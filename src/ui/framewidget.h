@@ -71,15 +71,15 @@ public:
 signals:
     void sendOnceClicked(const CANFrame& frame);
     void onSendFramePeriodicClicked(const CANFrame& frame, int intervalMs);
-    void onStopFramePeriodicClicked(const CANFrame& frame);
+    void onStopFramePeriodicClicked(const int& frame);
     void periodicStateChanged(uint32_t canId, bool enabled, int intervalMs);
     void removeClicked(uint32_t canId);
     void hideClicked();
     void canIdChanged(uint32_t oldId, uint32_t newId);
 
 private slots:
-    void onSendOnce();
-    void onPeriodicToggled(bool checked);
+    void onSend();
+    void onPeriodicToggled();
     void onStopFramePeriodic();
     void onRemove();
     void onHide();
@@ -97,7 +97,6 @@ private:
      * @return true if connected, false otherwise.
      */
     bool checkConnection();
-    bool m_checkPeriodicSendFrame = false;
 
     QString formatHexWithSpaces(const QString& input);
 

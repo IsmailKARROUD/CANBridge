@@ -638,14 +638,14 @@ void MainWindow::onSendFramePeriodic(const CANFrame& frame, int intervalMs)
         }
 }
 
-void MainWindow::onStopFramePeriodic(const CANFrame& frame) {
+void MainWindow::onStopFramePeriodic(const int& Id) {
         // Stop periodic transmission
         if (server->isListening()) {
-            server->removePeriodicFrame(frame.getId());
+            server->removePeriodicFrame(Id);
         } else if (client->isConnected()) {
-            client->removePeriodicFrame(frame.getId());
+            client->removePeriodicFrame(Id);
         }
-        addLogEvent(QString("Stopped periodic: ID 0x%1").arg(frame.getId(), 0, 16), "Frame");
+        addLogEvent(QString("Stopped periodic: ID 0x%1").arg(Id, 0, 16), "Frame");
     }
 
 /**
