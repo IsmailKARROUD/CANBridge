@@ -105,10 +105,17 @@ bool FrameFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &s
 
     // Check data filter against column 4 (e.g., "01 FF A0") — substring match
     if (!m_dataFilter.isEmpty()) {
-        QModelIndex dataIndex = sourceModel()->index(sourceRow, 4, sourceParent);
-        QString data = sourceModel()->data(dataIndex).toString();
-        if (!data.contains(m_dataFilter, Qt::CaseInsensitive)) {
-            return false;
+        if (!m_dataFilter.isEmpty()) {
+            QModelIndex dataIndex = sourceModel()->index(sourceRow, 4, sourceParent);
+            QString data = sourceModel()->data(dataIndex).toString();
+
+            // Remove spaces from both the data and filter for flexible matching
+            QString normalizedData = data.remove(' ');
+            QString normalizedFilter = m_dataFilter.trimmed().remove(' ');
+
+            if (!normalizedData.contains(normalizedFilter, Qt::CaseInsensitive)) {
+                return false;
+            }
         }
     }
 

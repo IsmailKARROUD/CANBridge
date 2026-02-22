@@ -19,6 +19,7 @@
 #include <QMenuBar>
 #include <QActionGroup>
 #include <QApplication>
+#include <QRegularExpression>
 
 #include "mainwindow.h"
 #include "aboutdialog.h"
@@ -314,6 +315,7 @@ void MainWindow::applyTheme(bool isDark)
     }
 }
 
+
 // ============================================================================
 // Tab 1: Connection
 // ============================================================================
@@ -503,6 +505,41 @@ void MainWindow::setupSimulatorTab()
     connect(sendOnceBtn, &QPushButton::clicked, this, &MainWindow::onSendFrame);
     connect(sendPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onSendPeriodic);
     connect(stopPeriodicBtn, &QPushButton::clicked, this, &MainWindow::onStopPeriodic);
+
+    // Auto-format hex data input with spaces (e.g., "0102" becomes "01 02")
+    connect(dataEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        // Block signals to prevent triggering this slot recursively when we call setText
+        dataEdit->blockSignals(true);
+
+        // Remember current cursor position before formatting
+        int cursorPos = dataEdit->cursorPosition();
+
+        // Format the text: remove non-hex chars, uppercase, add space every 2 chars
+        QString formatted = formatHexWithSpaces(text);
+
+        // Calculate how many spaces existed before the cursor in original text
+        int spacesBefore = text.first(cursorPos).count(' ');
+
+        // Calculate adjusted cursor position
+        int adjustedPos = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
+        int spacesAfter = formatted.first(adjustedPos).count(' ');
+
+        // Apply formatted text
+        dataEdit->setText(formatted);
+
+        // Restore cursor position, adjusted for any spaces that were added/removed
+        dataEdit->setCursorPosition(cursorPos + (spacesAfter - spacesBefore));
+
+        // Re-enable signals
+        dataEdit->blockSignals(false);
+
+        // Auto-update DLC based on number of bytes (each byte = 2 hex chars)
+        // Remove spaces to count actual hex characters, then divide by 2
+        QString cleaned = formatted;
+        cleaned.remove(' ');
+        int byteCount = (cleaned.length() + 1) / 2;
+        dlcSpin->setValue(qMin(byteCount, 8));  // Max DLC is 8
+    });
 }
 
 // ============================================================================
@@ -587,6 +624,30 @@ void MainWindow::setupAnalyzerTab()
     connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClearMessages);
     connect(saveFramesBtn, &QPushButton::clicked, this, &MainWindow::onSaveFrames);
     connect(loadFramesBtn, &QPushButton::clicked, this, &MainWindow::onLoadFrames);
+
+    // Auto-format as user types
+    connect(dataFilterEdit, &QLineEdit::textChanged, this, [this](const QString& text) {
+        // Block signals to prevent infinite loop
+        dataFilterEdit->blockSignals(true);
+
+        int cursorPos = dataFilterEdit->cursorPosition();
+        QString formatted = formatHexWithSpaces(text);
+
+        // Adjust cursor position for added spaces
+        int spacesBefore = text.first(cursorPos).count(' ');
+
+        // Calculate adjusted cursor position
+        int adjustedPos = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
+        int spacesAfter = formatted.first(adjustedPos).count(' ');
+
+        dataFilterEdit->setText(formatted);
+        dataFilterEdit->setCursorPosition(cursorPos + (spacesAfter - spacesBefore));
+
+        dataFilterEdit->blockSignals(false);
+
+        // Now trigger the filter
+        filterProxyModel->setDataFilter(formatted);
+    });
 }
 
 // ============================================================================
@@ -978,4 +1039,23 @@ void MainWindow::updateLogDisplay()
     }
 
     logDisplay->setText(displayLines.join("\n"));
+}
+
+// Auto-format hex input with spaces every 2 characters
+QString MainWindow::formatHexWithSpaces(const QString& input)
+{
+    // Remove all spaces and non-hex characters
+    QString cleaned = input.toUpper();
+    cleaned.remove(QRegularExpression("[^0-9A-F]"));
+
+    // Add space after every 2 characters
+    QString formatted;
+    for (int i = 0; i < cleaned.length(); i++) {
+        if (i > 0 && i % 2 == 0) {
+            formatted += ' ';
+        }
+        formatted += cleaned[i];
+    }
+
+    return formatted;
 }

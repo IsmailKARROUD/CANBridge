@@ -163,6 +163,12 @@ private:
 
     QAction* darkModeAction;            ///< Menu action for dark theme selection
     bool isDarkMode;                    ///< Current theme state
+
+    // ========================================================================
+    // Other function
+    // ========================================================================
+private:
+    QString formatHexWithSpaces(const QString& input);
 };
 
 #endif // MAINWINDOW_H
