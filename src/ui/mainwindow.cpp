@@ -84,8 +84,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(server, &TcpServer::frameSent, this, [this](const CANFrame& frame) {
         messageModel->addFrame(frame, true);  // TX
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
-        lastFrameStatusLabel->setText(QString("✓ Sent ID: 0x%1").arg(frame.getId(), 0, 16));
-        lastFrameStatusLabel->setStyleSheet("QLabel { color: green; }");
     });
 
 
@@ -447,7 +445,7 @@ void MainWindow::setupSimulatorTab()
 
     // -- Add Frame button at top --
     QHBoxLayout* topLayout = new QHBoxLayout();
-    addFrameBtn = new QPushButton("➕ Add Frame");
+    addFrameBtn = new QPushButton("+ Add Frame");
     addFrameBtn->setMaximumWidth(150);
     topLayout->addWidget(addFrameBtn);
     topLayout->addStretch();
@@ -469,8 +467,8 @@ void MainWindow::setupSimulatorTab()
 
     // -- Global controls at bottom --
     QHBoxLayout* globalLayout = new QHBoxLayout();
-    sendAllBtn = new QPushButton("📤 Send All Once");
-    stopAllBtn = new QPushButton("⏹ Stop All Periodic");
+    sendAllBtn = new QPushButton("▶︎ Send All");
+    stopAllBtn = new QPushButton("⏹ Stop All");
     sendAllBtn->setMaximumWidth(150);
     stopAllBtn->setMaximumWidth(150);
 
@@ -503,19 +501,15 @@ void MainWindow::setupSimulatorTab()
 
     connect(sendAllBtn, &QPushButton::clicked, this, [this]() {
         for (auto* widget : frameWidgets) {
-            onFrameSendOnce(widget->getFrame());
+            if(widget->getSendButton()->isEnabled() && widget->getSendButton()->isVisible()) widget->getSendButton()->click();
         }
         addLogEvent(QString("Sent all frames (%1 frames)").arg(frameWidgets.size()), "Frame");
     });
 
     connect(stopAllBtn, &QPushButton::clicked, this, [this]() {
         for (auto* widget : frameWidgets) {
-            if (widget->isPeriodicEnabled()) {
-                widget->setPeriodicEnabled(false);
-            }
+            if(widget->getStopButton()->isEnabled() && widget->getStopButton()->isVisible()) widget->getStopButton()->click();
         }
-        server->clearPeriodicFrames();
-        client->clearPeriodicFrames();
         addLogEvent("Stopped all periodic transmissions", "Frame");
     });
 }

@@ -117,6 +117,10 @@ private:
     /// Returns true when a server is listening or the client is connected.
     /// Null until setConnectionChecker() is called.
     std::function<bool()> m_connectionChecker;
+
+public:
+    QPushButton* getSendButton() const { return sendBtn; }
+    QPushButton* getStopButton() const { return stopBtn; }
 };
 
 #endif // FRAMEWIDGET_H
