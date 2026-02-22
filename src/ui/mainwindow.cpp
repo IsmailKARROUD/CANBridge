@@ -20,6 +20,9 @@
 #include <QActionGroup>
 #include <QApplication>
 #include <QRegularExpression>
+#include <QDialog>
+#include <QListWidget>
+#include <QDialogButtonBox>
 
 #include "mainwindow.h"
 #include "aboutdialog.h"
@@ -443,11 +446,20 @@ void MainWindow::setupSimulatorTab()
     QWidget* simTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(simTab);
 
-    // -- Add Frame button at top --
+    // -- Top bar: Add Frame + Show Hidden buttons --
     QHBoxLayout* topLayout = new QHBoxLayout();
+
     addFrameBtn = new QPushButton("+ Add Frame");
     addFrameBtn->setMaximumWidth(150);
     topLayout->addWidget(addFrameBtn);
+
+    // "Show Hidden" button — only visible when at least one frame is hidden.
+    // Label includes the hidden count so the user knows how many to restore.
+    showHiddenBtn = new QPushButton();
+    showHiddenBtn->setMaximumWidth(180);
+    showHiddenBtn->setVisible(false);  // Hidden until a frame is hidden
+    topLayout->addWidget(showHiddenBtn);
+
     topLayout->addStretch();
     mainLayout->addLayout(topLayout);
 
@@ -512,6 +524,63 @@ void MainWindow::setupSimulatorTab()
         }
         addLogEvent("Stopped all periodic transmissions", "Frame");
     });
+
+    // -- Show Hidden: open a dialog listing all hidden frames for selective restore --
+    connect(showHiddenBtn, &QPushButton::clicked, this, [this]() {
+        // Collect all hidden widgets into a list keyed by CAN ID
+        QList<QPair<uint32_t, FrameWidget*>> hiddenList;
+        for (auto it = frameWidgets.begin(); it != frameWidgets.end(); ++it) {
+            if (!it.value()->isVisible()) {
+                hiddenList.append({it.key(), it.value()});
+            }
+        }
+
+        if (hiddenList.isEmpty()) return;  // Nothing to show (shouldn't happen)
+
+        // Build the restore dialog
+        QDialog dialog(this);
+        dialog.setWindowTitle("Restore Hidden Frames");
+        dialog.setMinimumWidth(280);
+
+        QVBoxLayout* layout = new QVBoxLayout(&dialog);
+        layout->addWidget(new QLabel("Select frames to restore:"));
+
+        // One checkbox row per hidden frame, labelled with the CAN ID
+        QListWidget* list = new QListWidget(&dialog);
+        for (const auto& pair : hiddenList) {
+            QListWidgetItem* item = new QListWidgetItem(
+                QString("Frame 0x%1").arg(pair.first, 3, 16, QChar('0')).toUpper(),
+                list);
+            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+            item->setCheckState(Qt::Checked);  // Pre-select all by default
+        }
+        layout->addWidget(list);
+
+        // Restore Selected / Cancel buttons
+        QDialogButtonBox* buttons = new QDialogButtonBox(
+            QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+        buttons->button(QDialogButtonBox::Ok)->setText("Restore Selected");
+        layout->addWidget(buttons);
+
+        connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+        connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+        if (dialog.exec() != QDialog::Accepted) return;
+
+        // Restore only the checked frames
+        int restoredCount = 0;
+        for (int i = 0; i < list->count(); ++i) {
+            if (list->item(i)->checkState() == Qt::Checked) {
+                hiddenList[i].second->setVisible(true);
+                restoredCount++;
+            }
+        }
+
+        // Refresh the hidden-frame button count after restoring
+        updateHiddenFramesButton();
+
+        addLogEvent(QString("Restored %1 hidden frame(s)").arg(restoredCount), "Frame");
+    });
 }
 
 // ============================================================================
@@ -551,8 +620,10 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
     connect(widget, &FrameWidget::removeClicked, this, &MainWindow::onFrameRemove);
 
 
-    connect(widget, &FrameWidget::hideClicked, this, [widget]() {
+    connect(widget, &FrameWidget::hideClicked, this, [this, widget]() {
         widget->setVisible(false);
+        // Refresh the "Show Hidden (N)" button in the top bar
+        updateHiddenFramesButton();
     });
 
     connect(widget, &FrameWidget::canIdChanged, this,
@@ -581,6 +652,32 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
             });
 
     addLogEvent(QString("Added frame with ID: 0x%1").arg(canId, 0, 16), "Frame");
+}
+
+/**
+ * Recount hidden frame widgets and update the "Show Hidden" button.
+ *
+ * Iterates the full frameWidgets map and counts entries where isVisible()
+ * returns false. The button is shown with a live count when hidden frames
+ * exist, and hidden entirely when all frames are visible — so it never
+ * takes up space unnecessarily.
+ */
+void MainWindow::updateHiddenFramesButton()
+{
+    int hiddenCount = 0;
+    for (auto* widget : frameWidgets) {
+        if (!widget->isVisible()) {
+            hiddenCount++;
+        }
+    }
+
+    if (hiddenCount > 0) {
+        showHiddenBtn->setText(QString("- Show Hidden (%1)").arg(hiddenCount));
+        showHiddenBtn->setVisible(true);
+    } else {
+        // No hidden frames — remove the button from view entirely
+        showHiddenBtn->setVisible(false);
+    }
 }
 
 /**
@@ -657,6 +754,9 @@ void MainWindow::onFrameRemove(uint32_t canId)
 
         (*it)->deleteLater();
         frameWidgets.erase(it);
+
+        // A hidden frame may have been removed — keep the button count accurate
+        updateHiddenFramesButton();
 
         addLogEvent(QString("Removed frame ID: 0x%1").arg(canId, 0, 16), "Frame");
     }

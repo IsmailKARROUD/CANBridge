@@ -126,10 +126,22 @@ private:
     QVBoxLayout* framesLayout;              ///< Container for FrameWidget instances
     QMap<uint32_t, FrameWidget*> frameWidgets;  ///< Active frame widgets keyed by CAN ID
     QPushButton* addFrameBtn;               ///< Button to add a new frame widget
+    QPushButton* showHiddenBtn;             ///< Button to restore hidden frames (visible only when ≥1 frame is hidden)
     QPushButton* sendAllBtn;               ///< Button to send all frames once
     QPushButton* stopAllBtn;               ///< Button to stop all periodic transmissions
     QLabel* lastFrameStatusLabel;          ///< Status label showing the last sent frame result
     // Note: addFrameWidget() and isCanIdDuplicate() are declared in private slots: above
+
+    /**
+     * @brief Recount hidden frame widgets and update showHiddenBtn accordingly.
+     *
+     * Iterates frameWidgets, counts entries where isVisible() == false, then:
+     *  - Shows the button with label "- Show Hidden (N)" if N > 0
+     *  - Hides the button entirely if N == 0
+     *
+     * Call this after any hide, restore, or remove operation.
+     */
+    void updateHiddenFramesButton();
 
     // -- Analyzer tab --
     QTableView* messageTable;           ///< Table view bound to proxy model
