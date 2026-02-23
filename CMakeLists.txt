@@ -30,6 +30,7 @@ qt_add_executable(CANBridge
     src/models/framefilterproxymodel.cpp
     src/ui/mainwindow.h
     src/ui/mainwindow.cpp
+    src/ui/mainwindow_menubar.cpp
     src/ui/mainwindow.ui
     src/ui/aboutdialog.h
     src/ui/aboutdialog.cpp
