@@ -125,9 +125,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ==== Model signal connections ====
 
-    // Update the message count label whenever a new frame is added
+    // Update the message count label and optionally auto-scroll whenever a new frame is added
     connect(messageModel, &MessageModel::frameAdded, this, [this]() {
         messageCountLabel->setText(QString("Messages: %1").arg(messageModel->rowCount()));
+        if (m_autoScroll)
+            messageTable->scrollToBottom();
     });
 }
 
@@ -222,6 +224,106 @@ void MainWindow::setupMenuBar()
 
     connect(rawMsAction, &QAction::triggered, this, [this]() {
         messageModel->setTimestampFormat("ms");
+    });
+
+    // -- Settings menu --
+    QMenu* settingsMenu = menuBar->addMenu("Settings");
+
+    // --- Max Analyzer Frames ---
+    QMenu* maxFramesMenu = settingsMenu->addMenu("Max Analyzer Frames");
+    QActionGroup* maxFramesGroup = new QActionGroup(this);
+    auto addFrameOption = [&](const QString& label, int value, bool isDefault) {
+        QAction* act = maxFramesMenu->addAction(label);
+        act->setCheckable(true);
+        act->setChecked(isDefault);
+        maxFramesGroup->addAction(act);
+        connect(act, &QAction::triggered, this, [this, value]() {
+            messageModel->setMaxFrames(value);
+        });
+    };
+    addFrameOption("500",        500,   false);
+    addFrameOption("1,000",      1000,  false);
+    addFrameOption("5,000",      5000,  false);
+    addFrameOption("10,000",     10000, true);
+    addFrameOption("Unlimited",  0,     false);
+
+    settingsMenu->addSeparator();
+
+    // --- Max Log Entries ---
+    QMenu* maxLogMenu = settingsMenu->addMenu("Max Log Entries");
+    QActionGroup* maxLogGroup = new QActionGroup(this);
+    auto addLogOption = [&](const QString& label, int value, bool isDefault) {
+        QAction* act = maxLogMenu->addAction(label);
+        act->setCheckable(true);
+        act->setChecked(isDefault);
+        maxLogGroup->addAction(act);
+        connect(act, &QAction::triggered, this, [this, value]() {
+            MAXLOGHISTORY = value;
+            while (logHistory.size() > MAXLOGHISTORY)
+                logHistory.removeLast();
+            updateLogDisplay();
+        });
+    };
+    addLogOption("100",  100,  false);
+    addLogOption("500",  500,  false);
+    addLogOption("1000",  1000,  false);
+    addLogOption("5,000",  5000,  false);
+    addLogOption("10,000",  10000,  false);
+
+    settingsMenu->addSeparator();
+
+    // --- Periodic Timer Resolution ---
+    QMenu* timerMenu = settingsMenu->addMenu("Periodic Timer Resolution");
+    QActionGroup* timerGroup = new QActionGroup(this);
+    auto addTimerOption = [&](const QString& label, int ms, bool isDefault) {
+        QAction* act = timerMenu->addAction(label);
+        act->setCheckable(true);
+        act->setChecked(isDefault);
+        timerGroup->addAction(act);
+        connect(act, &QAction::triggered, this, [this, ms]() {
+            m_timerResolutionMs = ms;
+            server->setTimerInterval(ms);
+            client->setTimerInterval(ms);
+            // Clamp all existing frame widgets so none can send faster than the timer fires
+            for (auto* widget : std::as_const(frameWidgets))
+                widget->setMinInterval(ms);
+        });
+    };
+    addTimerOption("1 ms  (High Accuracy)",  1,   false);
+    addTimerOption("5 ms",                   5,   false);
+    addTimerOption("10 ms (Default)",        10,  true);
+    addTimerOption("50 ms (Low CPU)",        50,  false);
+
+    settingsMenu->addSeparator();
+
+    // --- Max Periodic Interval ---
+    QMenu* maxIntervalMenu = settingsMenu->addMenu("Max Periodic Interval");
+    QActionGroup* maxIntervalGroup = new QActionGroup(this);
+    auto addMaxIntervalOption = [&](const QString& label, int ms, bool isDefault) {
+        QAction* act = maxIntervalMenu->addAction(label);
+        act->setCheckable(true);
+        act->setChecked(isDefault);
+        maxIntervalGroup->addAction(act);
+        connect(act, &QAction::triggered, this, [this, ms]() {
+            m_maxIntervalMs = ms;
+            for (auto* widget : std::as_const(frameWidgets))
+                widget->setMaxInterval(ms);
+        });
+    };
+    addMaxIntervalOption("1,000 ms  (1 s)",    1000,  false);
+    addMaxIntervalOption("5,000 ms  (5 s)",    5000,  false);
+    addMaxIntervalOption("10,000 ms (Default)", 10000, true);
+    addMaxIntervalOption("60,000 ms (1 min)",  60000, false);
+    addMaxIntervalOption("Unlimited",           0,    false);
+
+    settingsMenu->addSeparator();
+
+    // --- Auto-scroll Analyzer ---
+    QAction* autoScrollAction = settingsMenu->addAction("Auto-scroll Analyzer");
+    autoScrollAction->setCheckable(true);
+    autoScrollAction->setChecked(false);
+    connect(autoScrollAction, &QAction::toggled, this, [this](bool checked) {
+        m_autoScroll = checked;
     });
 }
 
@@ -617,6 +719,12 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
     widget->setConnectionChecker([this]() {
         return server->isListening() || client->isConnected();
     });
+
+    // Set the interval spinner range and default value entirely from settings —
+    // no hardcoded range lives in the FrameWidget constructor.
+    widget->setMinInterval(m_timerResolutionMs);
+    widget->setMaxInterval(m_maxIntervalMs);
+    widget->setIntervalValue(qMax(100, m_timerResolutionMs));
 
     // Insert before the stretch spacer
     framesLayout->insertWidget(framesLayout->count() - 1, widget);
@@ -1148,8 +1256,8 @@ void MainWindow::addLogEvent(const QString& message, const QString& category)
 
     logHistory.prepend(entry);  // Newest entries first
 
-    // Cap log history at 50 entries
-    if (logHistory.size() > 50) {
+    // Cap log history at MAXLOGHISTORY entries
+    while (logHistory.size() > MAXLOGHISTORY) {
         logHistory.removeLast();
     }
 

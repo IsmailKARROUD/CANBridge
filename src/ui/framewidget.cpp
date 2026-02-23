@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QRegularExpression>
+#include <limits>
 
 FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     : QWidget(parent)
@@ -37,8 +38,8 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     controlsLayout->addWidget(periodicCheckBox);
 
     intervalSpin = new QSpinBox();
-    intervalSpin->setRange(1, 100000);
-    intervalSpin->setValue(100);
+    // Range and default value are set by MainWindow via setMinInterval() /
+    // setMaxInterval() / setIntervalValue() immediately after construction.
     intervalSpin->setSuffix(" ms");
     intervalSpin->setMaximumWidth(100);
     intervalSpin->setEnabled(false);
@@ -141,6 +142,29 @@ void FrameWidget::setFrame(const CANFrame& frame)
 void FrameWidget::setPeriodicEnabled(bool enabled)
 {
     periodicCheckBox->setChecked(enabled);
+}
+
+void FrameWidget::setMinInterval(int ms)
+{
+    intervalSpin->setMinimum(ms);
+    if (intervalSpin->value() < ms)
+        intervalSpin->setValue(ms);
+}
+
+void FrameWidget::setMaxInterval(int ms)
+{
+    if (ms <= 0)
+        intervalSpin->setMaximum(std::numeric_limits<int>::max());
+    else
+        intervalSpin->setMaximum(ms);
+
+    if (ms > 0 && intervalSpin->value() > ms)
+        intervalSpin->setValue(ms);
+}
+
+void FrameWidget::setIntervalValue(int ms)
+{
+    intervalSpin->setValue(ms);
 }
 
 void FrameWidget::setConnectionChecker(std::function<bool()> checker)

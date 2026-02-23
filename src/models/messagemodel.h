@@ -46,6 +46,13 @@ public:
     /// Change the timestamp display format and refresh the timestamp column.
     void setTimestampFormat(const QString& format);
 
+    /**
+     * @brief Set the maximum number of frames to keep in the model.
+     * @param max Upper limit. Use 0 for unlimited.
+     * If the current frame count exceeds the new limit, oldest frames are trimmed.
+     */
+    void setMaxFrames(int max);
+
 public slots:
     /**
      * @brief Append a new CAN frame to the model.
@@ -63,7 +70,7 @@ signals:
     void frameAdded();
 
 private:
-    static const int MAX_FRAMES = 10000;        ///< Upper limit to prevent memory exhaustion
+    int m_maxFrames = 10000;                     ///< Upper limit to prevent memory exhaustion (0 = unlimited)
     QString m_timestampFormat = "hh:mm:ss.zzz"; ///< Current timestamp display format
     struct FrameEntry {
         CANFrame frame;

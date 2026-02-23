@@ -78,6 +78,9 @@ public:
     /// Check if the server is currently listening for connections.
     bool isListening() const { return server->isListening(); }
 
+    /// Change the periodic transmission timer tick interval (milliseconds).
+    void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
+
 signals:
     /// Emitted when a new client connects. Provides the client's IP address.
     void clientConnected(const QString& address);

@@ -191,6 +191,10 @@ private:
     // ========================================================================
 private:
     QString formatHexWithSpaces(const QString& input);
+    int MAXLOGHISTORY = 50;             ///< Maximum number of log entries to keep
+    bool m_autoScroll = false;          ///< Whether the Analyzer table auto-scrolls on new frames
+    int m_timerResolutionMs = 10;       ///< Current periodic timer tick (enforced as min frame interval)
+    int m_maxIntervalMs = 10000;        ///< Upper bound for any frame's periodic interval (0 = unlimited)
 };
 
 #endif // MAINWINDOW_H

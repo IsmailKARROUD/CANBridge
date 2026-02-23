@@ -39,6 +39,23 @@ public:
     void setPeriodicEnabled(bool enabled);
 
     /**
+     * @brief Enforce a minimum periodic interval matching the timer resolution.
+     * @param ms Minimum allowed interval in milliseconds.
+     * Clamps the current intervalSpin value up if it is below the new minimum.
+     */
+    void setMinInterval(int ms);
+
+    /**
+     * @brief Enforce a maximum periodic interval from the Settings menu.
+     * @param ms Maximum allowed interval in milliseconds. 0 = no upper limit.
+     * Clamps the current intervalSpin value down if it exceeds the new maximum.
+     */
+    void setMaxInterval(int ms);
+
+    /// Set the current interval spinner value (used during widget initialization).
+    void setIntervalValue(int ms);
+
+    /**
      * @brief Provide a live connection-state checker to this widget.
      *
      * The supplied callable is invoked each time the user clicks Send to

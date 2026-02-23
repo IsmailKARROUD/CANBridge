@@ -113,8 +113,8 @@ QVariant MessageModel::headerData(int section, Qt::Orientation orientation, int 
  */
 void MessageModel::addFrame(const CANFrame& frame, bool isSent)
 {
-    // Remove oldest frame if at capacity
-    if (frames.size() >= MAX_FRAMES) {
+    // Remove oldest frame if at capacity (skip check when unlimited)
+    if (m_maxFrames > 0 && frames.size() >= m_maxFrames) {
         beginRemoveRows(QModelIndex(), 0, 0);
         frames.removeFirst();
         endRemoveRows();
@@ -135,6 +135,23 @@ void MessageModel::clear()
     beginResetModel();
     frames.clear();
     endResetModel();
+}
+
+/**
+ * Set the maximum number of stored frames. Trims oldest entries immediately
+ * if the current count exceeds the new limit. Pass 0 for unlimited.
+ */
+void MessageModel::setMaxFrames(int max)
+{
+    m_maxFrames = max;
+
+    if (m_maxFrames > 0 && frames.size() > m_maxFrames) {
+        int toRemove = frames.size() - m_maxFrames;
+        beginRemoveRows(QModelIndex(), 0, toRemove - 1);
+        for (int i = 0; i < toRemove; ++i)
+            frames.removeFirst();
+        endRemoveRows();
+    }
 }
 
 /**

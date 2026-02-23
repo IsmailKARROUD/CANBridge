@@ -76,6 +76,9 @@ public:
     /// Remove all periodic frames and stop the periodic timer.
     void clearPeriodicFrames();
 
+    /// Change the periodic transmission timer tick interval (milliseconds).
+    void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
+
 signals:
     /// Emitted when the TCP connection is successfully established.
     void connected();
