@@ -98,7 +98,6 @@ private:
 
     // --- Menu bar and theme ---
     void setupMenuBar();                ///< Create the application menu bar (CANBridge, View)
-    void applyTheme(bool isDark);       ///< Apply dark or light theme stylesheet
 
     // ========================================================================
     // UI Widgets

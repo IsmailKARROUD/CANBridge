@@ -4,7 +4,7 @@
  *
  * Contains:
  *  - MainWindow::setupMenuBar()  — builds the full menu bar (CANBridge, View, Settings)
- *  - MainWindow::applyTheme()    — applies dark/light stylesheet to the application
+ *  - QGuiApplication::styleHints()   — applies dark/light stylesheet to the application
  *
  * This file is a split of the MainWindow class implementation.
  * The class definition and all other slots live in mainwindow.h / mainwindow.cpp.
@@ -18,6 +18,8 @@
 #include <QMenu>
 #include <QAction>
 #include <QActionGroup>
+#include <QGuiApplication>
+#include <QStyleHints>
 
 // ============================================================================
 // Menu Bar Setup
@@ -74,9 +76,15 @@ void MainWindow::setupMenuBar()
     darkModeAction->setCheckable(true);
     themeGroup->addAction(darkModeAction);
 
-    connect(autoThemeAction,  &QAction::triggered, this, [this]() { applyTheme(false); });
-    connect(lightThemeAction, &QAction::triggered, this, [this]() { applyTheme(false); });
-    connect(darkModeAction,   &QAction::triggered, this, [this]() { applyTheme(true);  });
+    connect(autoThemeAction,  &QAction::triggered, this, [this]() {
+        QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Unknown);
+    });
+    connect(lightThemeAction, &QAction::triggered, this, [this]() {
+    QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
+    });
+    connect(darkModeAction,   &QAction::triggered, this, [this]() {
+        QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Dark);
+    });
 
     // Timestamp format sub-menu
     QMenu* timestampMenu = viewMenu->addMenu("Timestamp Format");
@@ -210,97 +218,4 @@ void MainWindow::setupMenuBar()
     });
 }
 
-// ============================================================================
-// Theme
-// ============================================================================
 
-/**
- * Apply a dark or light theme to the entire application via stylesheet.
- * Dark theme uses a custom QSS stylesheet; light theme clears it to
- * restore Qt's default platform look.
- */
-void MainWindow::applyTheme(bool isDark)
-{
-    isDarkMode = isDark;
-
-    if (isDark) {
-        qApp->setStyleSheet(R"(
-            QMainWindow, QWidget {
-                background-color: #2b2b2b;
-                color: #ffffff;
-            }
-            QGroupBox {
-                border: 1px solid #555555;
-                border-radius: 5px;
-                margin-top: 10px;
-                font-weight: bold;
-                color: #ffffff;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px;
-            }
-            QLineEdit, QSpinBox, QTextEdit {
-                background-color: #3c3c3c;
-                color: #ffffff;
-                border: 1px solid #555555;
-                border-radius: 3px;
-                padding: 5px;
-            }
-            QPushButton {
-                background-color: #4a4a4a;
-                color: #ffffff;
-                border: 1px solid #666666;
-                border-radius: 5px;
-                padding: 5px 15px;
-            }
-            QPushButton:hover {
-                background-color: #5a5a5a;
-            }
-            QPushButton:pressed {
-                background-color: #3a3a3a;
-            }
-            QPushButton:disabled {
-                background-color: #2b2b2b;
-                color: #666666;
-            }
-            QTableView {
-                background-color: #3c3c3c;
-                color: #ffffff;
-                gridline-color: #555555;
-            }
-            QHeaderView::section {
-                background-color: #4a4a4a;
-                color: #ffffff;
-                border: 1px solid #555555;
-                padding: 5px;
-            }
-            QTabWidget::pane {
-                border: 1px solid #555555;
-            }
-            QTabBar::tab {
-                background-color: #4a4a4a;
-                color: #ffffff;
-                border: 1px solid #555555;
-                padding: 8px 16px;
-            }
-            QTabBar::tab:selected {
-                background-color: #2b2b2b;
-            }
-            QComboBox {
-                background-color: #3c3c3c;
-                color: #ffffff;
-                border: 1px solid #555555;
-                border-radius: 3px;
-                padding: 5px;
-            }
-            QComboBox::drop-down {
-                border: none;
-            }
-        )");
-    } else {
-        // Clear stylesheet to restore default platform appearance
-        qApp->setStyleSheet("");
-    }
-}
