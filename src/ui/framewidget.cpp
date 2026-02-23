@@ -49,26 +49,33 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     sendBtn = new QPushButton("Send");
     sendBtn->setMaximumWidth(80);
     sendBtn->setVisible(true);
+    sendBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     controlsLayout->addWidget(sendBtn);
 
     stopBtn = new QPushButton("Stop");
     stopBtn->setMaximumWidth(80);
     stopBtn->setVisible(false);
+    stopBtn->setStyleSheet("QPushButton { color: red; font-weight: bold; }");
     controlsLayout->addWidget(stopBtn);
 
     hideBtn = new QPushButton("Hide");
     hideBtn->setMaximumWidth(80);
+    hideBtn->setStyleSheet("QPushButton { color: yellow; font-weight: bold; }");
     controlsLayout->addWidget(hideBtn);
+    controlsLayout->addStretch();
 
     removeBtn = new QPushButton("Remove");
     removeBtn->setMaximumWidth(80);
+    removeBtn->setStyleSheet("QPushButton { color: red; font-weight: bold; }");
+
+
     controlsLayout->addWidget(removeBtn);
 
-    controlsLayout->addStretch();
+
 
     // Status label
     statusLabel = new QLabel("");
-    statusLabel->setStyleSheet("QLabel { color: gray; }");
+    statusLabel->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
 
     QVBoxLayout* boxLayout = new QVBoxLayout(frameBox);
     boxLayout->addLayout(controlsLayout);

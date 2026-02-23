@@ -155,6 +155,7 @@ void MainWindow::setupConnectionTab()
     QWidget* connTab = new QWidget();
     QVBoxLayout* mainLayout = new QVBoxLayout(connTab);
 
+
     // -- Server section --
     QGroupBox* serverGroup = new QGroupBox("Server");
     QHBoxLayout* serverLayout = new QHBoxLayout();
@@ -173,8 +174,11 @@ void MainWindow::setupConnectionTab()
     serverLayout->addWidget(serverStatusIndicator);
 
     startServerBtn = new QPushButton("Start");
+    startServerBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     stopServerBtn = new QPushButton("Stop");
+    stopServerBtn->setStyleSheet("QPushButton { color: grey; font-weight: bold; }");
     stopServerBtn->setEnabled(false);       // Disabled until server is started
+    stopServerBtn->setVisible(false);       // hide until server is started
     serverLayout->addWidget(startServerBtn);
     serverLayout->addWidget(stopServerBtn);
     serverLayout->addStretch();
@@ -202,8 +206,11 @@ void MainWindow::setupConnectionTab()
     clientLayout->addWidget(clientStatusIndicator);
 
     connectBtn = new QPushButton("Connect");
+    connectBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     disconnectBtn = new QPushButton("Disconnect");
+    disconnectBtn->setStyleSheet("QPushButton { color: grey; font-weight: bold; }");
     disconnectBtn->setEnabled(false);       // Disabled until connected
+    disconnectBtn->setVisible(false);       // hide until connected
     clientLayout->addWidget(connectBtn);
     clientLayout->addWidget(disconnectBtn);
     clientLayout->addStretch();
@@ -284,6 +291,7 @@ void MainWindow::setupSimulatorTab()
 
     addFrameBtn = new QPushButton("+ Add Frame");
     addFrameBtn->setMaximumWidth(150);
+    addFrameBtn->setStyleSheet("QPushButton { color: #AFFF59; font-weight: bold; }");
     topLayout->addWidget(addFrameBtn);
 
     // "Show Hidden" button — only visible when at least one frame is hidden.
@@ -315,7 +323,9 @@ void MainWindow::setupSimulatorTab()
     sendAllBtn = new QPushButton("▶︎ Send All");
     stopAllBtn = new QPushButton("⏹ Stop All");
     sendAllBtn->setMaximumWidth(150);
+    sendAllBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     stopAllBtn->setMaximumWidth(150);
+    stopAllBtn->setStyleSheet("QPushButton { color: grey; font-weight: bold; }");
 
     globalLayout->addWidget(sendAllBtn);
     globalLayout->addWidget(stopAllBtn);
@@ -720,10 +730,12 @@ void MainWindow::setupAnalyzerTab()
 void MainWindow::onStartServer()
 {
     if (server->startServer(serverPortSpin->value())) {
-        serverStatusIndicator->setText("● Running");
+        serverStatusIndicator->setText("▶︎ Running");
         serverStatusIndicator->setStyleSheet("QLabel { color: green; font-weight: bold; }");
         startServerBtn->setEnabled(false);
+        startServerBtn->setVisible(false);
         stopServerBtn->setEnabled(true);
+        stopServerBtn->setVisible(true);
         serverPortSpin->setEnabled(false);  // Lock port while server is running
 
         addLogEvent(QString("Server started on port %1").arg(serverPortSpin->value()), "Server");
@@ -743,7 +755,9 @@ void MainWindow::onStopServer()
     serverStatusIndicator->setText("● Stopped");
     serverStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
     startServerBtn->setEnabled(true);
+    startServerBtn->setVisible(true);
     stopServerBtn->setEnabled(false);
+    stopServerBtn->setVisible(false);
     serverPortSpin->setEnabled(true);  // Unlock port for reconfiguration
 
     addLogEvent("Server stopped", "Server");
@@ -771,10 +785,12 @@ void MainWindow::onDisconnect()
  */
 void MainWindow::onClientConnected()
 {
-    clientStatusIndicator->setText("● Connected");
+    clientStatusIndicator->setText("▶︎ Connected");
     clientStatusIndicator->setStyleSheet("QLabel { color: green; font-weight: bold; }");
     connectBtn->setEnabled(false);
+    connectBtn->setVisible(false);
     disconnectBtn->setEnabled(true);
+    disconnectBtn->setVisible(true);
     hostEdit->setEnabled(false);        // Lock inputs while connected
     clientPortSpin->setEnabled(false);
 
@@ -790,7 +806,9 @@ void MainWindow::onClientDisconnected()
     clientStatusIndicator->setText("● Disconnected");
     clientStatusIndicator->setStyleSheet("QLabel { color: gray; font-weight: bold; }");
     connectBtn->setEnabled(true);
+    connectBtn->setVisible(true);
     disconnectBtn->setEnabled(false);
+    disconnectBtn->setVisible(false);
     hostEdit->setEnabled(true);         // Unlock inputs for reconfiguration
     clientPortSpin->setEnabled(true);
 
