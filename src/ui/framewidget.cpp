@@ -60,7 +60,7 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
 
     hideBtn = new QPushButton("Hide");
     hideBtn->setMaximumWidth(80);
-    hideBtn->setStyleSheet("QPushButton { color: yellow; font-weight: bold; }");
+    hideBtn->setStyleSheet("QPushButton { color: orange; font-weight: bold; }");
     controlsLayout->addWidget(hideBtn);
     controlsLayout->addStretch();
 

@@ -291,7 +291,7 @@ void MainWindow::setupSimulatorTab()
 
     addFrameBtn = new QPushButton("+ Add Frame");
     addFrameBtn->setMaximumWidth(150);
-    addFrameBtn->setStyleSheet("QPushButton { color: #AFFF59; font-weight: bold; }");
+    addFrameBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     topLayout->addWidget(addFrameBtn);
 
     // "Show Hidden" button — only visible when at least one frame is hidden.
