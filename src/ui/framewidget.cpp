@@ -19,13 +19,24 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     canIdEdit->setMaximumWidth(100);
     controlsLayout->addWidget(canIdEdit);
 
-    // DLC spinner
+    // DLC spinner — Classic (0-8) / XL (0-2048)
     controlsLayout->addWidget(new QLabel("DLC:"));
     dlcSpin = new QSpinBox();
     dlcSpin->setRange(0, 8);
     dlcSpin->setValue(8);
-    dlcSpin->setMaximumWidth(60);
+    dlcSpin->setMaximumWidth(70);
     controlsLayout->addWidget(dlcSpin);
+
+    // FD DLC combo — shown only in CAN-FD mode, hidden by default
+    dlcComboFD = new QComboBox();
+    dlcComboFD->setMaximumWidth(70);
+    const int fdTable[16] = {0,1,2,3,4,5,6,7,8,12,16,20,24,32,48,64};
+    for (int v : fdTable) {
+        dlcComboFD->addItem(QString::number(v));
+    }
+    dlcComboFD->setCurrentIndex(8);  // Default: 8 bytes
+    dlcComboFD->setVisible(false);
+    controlsLayout->addWidget(dlcComboFD);
 
     // Data bytes input
     controlsLayout->addWidget(new QLabel("Data:"));
@@ -38,8 +49,6 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     controlsLayout->addWidget(periodicCheckBox);
 
     intervalSpin = new QSpinBox();
-    // Range and default value are set by MainWindow via setMinInterval() /
-    // setMaxInterval() / setIntervalValue() immediately after construction.
     intervalSpin->setSuffix(" ms");
     intervalSpin->setMaximumWidth(100);
     intervalSpin->setEnabled(false);
@@ -67,11 +76,7 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     removeBtn = new QPushButton("Remove");
     removeBtn->setMaximumWidth(80);
     removeBtn->setStyleSheet("QPushButton { color: red; font-weight: bold; }");
-
-
     controlsLayout->addWidget(removeBtn);
-
-
 
     // Status label
     statusLabel = new QLabel("");
@@ -85,17 +90,63 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     // Connect signals
-    connect(sendBtn, &QPushButton::clicked, this, &FrameWidget::onSend);
-    connect(stopBtn, &QPushButton::clicked, this, &FrameWidget::onStopFramePeriodic);
-    connect(hideBtn, &QPushButton::clicked, this, &FrameWidget::onHide);
-    connect(removeBtn, &QPushButton::clicked, this, &FrameWidget::onRemove);
-    connect(periodicCheckBox, &QCheckBox::toggled, this, &FrameWidget::onPeriodicToggled);
-    connect(canIdEdit, &QLineEdit::editingFinished, this, &FrameWidget::onCanIdChanged);
-    connect(dataEdit, &QLineEdit::textChanged, this, &FrameWidget::onDataChanged);
-
-    // Enable/disable interval spinner based on checkbox
+    connect(sendBtn,          &QPushButton::clicked,   this, &FrameWidget::onSend);
+    connect(stopBtn,          &QPushButton::clicked,   this, &FrameWidget::onStopFramePeriodic);
+    connect(hideBtn,          &QPushButton::clicked,   this, &FrameWidget::onHide);
+    connect(removeBtn,        &QPushButton::clicked,   this, &FrameWidget::onRemove);
+    connect(periodicCheckBox, &QCheckBox::toggled,     this, &FrameWidget::onPeriodicToggled);
+    connect(canIdEdit,        &QLineEdit::editingFinished, this, &FrameWidget::onCanIdChanged);
+    connect(dataEdit,         &QLineEdit::textChanged, this, &FrameWidget::onDataChanged);
     connect(periodicCheckBox, &QCheckBox::toggled, intervalSpin, &QSpinBox::setEnabled);
 }
+
+// ============================================================================
+// CAN Type / ID Format
+// ============================================================================
+
+void FrameWidget::setCanType(CanType type)
+{
+    m_canType = type;
+    switch (type) {
+    case CanType::Classic:
+        dlcSpin->setRange(0, 8);
+        dlcSpin->setVisible(true);
+        dlcComboFD->setVisible(false);
+        break;
+    case CanType::FD:
+        dlcSpin->setVisible(false);
+        dlcComboFD->setVisible(true);
+        break;
+    case CanType::XL:
+        dlcSpin->setRange(0, 2048);
+        dlcSpin->setVisible(true);
+        dlcComboFD->setVisible(false);
+        break;
+    }
+}
+
+void FrameWidget::setIdFormat(IdFormat fmt)
+{
+    m_idFormat = fmt;
+}
+
+int FrameWidget::getEffectiveDlc() const
+{
+    if (m_canType == CanType::FD)
+        return dlcComboFD->currentIndex();
+    return dlcSpin->value();
+}
+
+int FrameWidget::getEffectiveDataBytes() const
+{
+    if (m_canType == CanType::FD)
+        return CANFrame::FD_DLC_TABLE[dlcComboFD->currentIndex()];
+    return dlcSpin->value();
+}
+
+// ============================================================================
+// Getters
+// ============================================================================
 
 CANFrame FrameWidget::getFrame() const
 {
@@ -105,15 +156,14 @@ CANFrame FrameWidget::getFrame() const
     if (!ok) id = 0x100;
 
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    quint8 data[8] = {0};
-    for (int i = 0; i < qMin(dataList.size(), 8); ++i) {
+    QByteArray data;
+    for (int i = 0; i < dataList.size(); ++i) {
         quint32 byte = dataList[i].toUInt(&ok, 16);
-        if (ok && byte <= 0xFF) {
-            data[i] = static_cast<quint8>(byte);
-        }
+        if (ok && byte <= 0xFF)
+            data.append(static_cast<char>(byte));
     }
 
-    return CANFrame(id, dlcSpin->value(), data);
+    return CANFrame(id, static_cast<quint16>(getEffectiveDlc()), data, m_canType, m_idFormat);
 }
 
 uint32_t FrameWidget::getCanId() const
@@ -131,15 +181,24 @@ int FrameWidget::getPeriodicInterval() const
     return intervalSpin->value();
 }
 
+// ============================================================================
+// Setters
+// ============================================================================
+
 void FrameWidget::setFrame(const CANFrame& frame)
 {
     canIdEdit->setText(QString("0x%1").arg(frame.getId(), 0, 16));
-    dlcSpin->setValue(frame.getDlc());
 
+    if (frame.getFrameType() == CanType::FD) {
+        dlcComboFD->setCurrentIndex(frame.getDlc());
+    } else {
+        dlcSpin->setValue(frame.getDlc());
+    }
+
+    const QByteArray& d = frame.getData();
     QStringList dataBytes;
-    for (int i = 0; i < frame.getDlc(); ++i) {
-        // CANFrame exposes individual bytes via getDataIndex(), not a raw pointer
-        dataBytes.append(QString("%1").arg(frame.getDataIndex(i), 2, 16, QChar('0')).toUpper());
+    for (int i = 0; i < d.size(); ++i) {
+        dataBytes.append(QString("%1").arg(static_cast<quint8>(d[i]), 2, 16, QChar('0')).toUpper());
     }
     dataEdit->setText(dataBytes.join(" "));
 
@@ -176,15 +235,29 @@ void FrameWidget::setIntervalValue(int ms)
 
 void FrameWidget::setConnectionChecker(std::function<bool()> checker)
 {
-    // Store the callable supplied by MainWindow. It will be invoked live on
-    // every send attempt so it always reflects the current network state.
     m_connectionChecker = std::move(checker);
 }
 
+void FrameWidget::setConnected(bool connected)
+{
+    m_connected = connected;
+}
+
+// ============================================================================
+// Private helpers
+// ============================================================================
+
 bool FrameWidget::checkConnection()
 {
-    // If no checker was injected yet, treat it as not connected
-    if (!m_connectionChecker || !m_connectionChecker()) {
+    if (m_connectionChecker) {
+        if (!m_connectionChecker()) {
+            statusLabel->setText("✗ Error: Not connected (start server or connect client)");
+            statusLabel->setStyleSheet("QLabel { color: red; }");
+            return false;
+        }
+        return true;
+    }
+    if (!m_connected) {
         statusLabel->setText("✗ Error: Not connected (start server or connect client)");
         statusLabel->setStyleSheet("QLabel { color: red; }");
         return false;
@@ -192,11 +265,12 @@ bool FrameWidget::checkConnection()
     return true;
 }
 
+// ============================================================================
+// Slot handlers
+// ============================================================================
+
 void FrameWidget::onSend()
 {
-    // --- Check connection before anything else ---
-    // Queries the live checker lambda provided by MainWindow; bails out
-    // with an error on the status label if no server/client is active.
     if (!checkConnection()) return;
 
     sendBtn->setEnabled(false);
@@ -206,8 +280,10 @@ void FrameWidget::onSend()
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
-    if (!ok || id > 0x1FFFFFFF) {   // 29-bit extended CAN ID max
-        statusLabel->setText("✗ Error: Invalid CAN ID (max 0x1FFFFFFF)");
+    quint32 maxId = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                        : CANFrame::ID_MAX_EXTENDED;
+    if (!ok || id > maxId) {
+        statusLabel->setText(QString("✗ Error: Invalid CAN ID (max 0x%1)").arg(maxId, 0, 16));
         statusLabel->setStyleSheet("QLabel { color: red; }");
         sendBtn->setVisible(true);
         stopBtn->setVisible(false);
@@ -217,8 +293,11 @@ void FrameWidget::onSend()
 
     // --- Validate data bytes ---
     QStringList dataList = dataEdit->text().split(' ', Qt::SkipEmptyParts);
-    if (dataList.size() > 8) {
-        statusLabel->setText("✗ Error: Max 8 data bytes");
+    int maxBytes = (m_canType == CanType::Classic) ? 8
+                 : (m_canType == CanType::FD)      ? 64
+                 :                                   2048;
+    if (dataList.size() > maxBytes) {
+        statusLabel->setText(QString("✗ Error: Max %1 data bytes").arg(maxBytes));
         statusLabel->setStyleSheet("QLabel { color: red; }");
         sendBtn->setVisible(true);
         stopBtn->setVisible(false);
@@ -226,7 +305,7 @@ void FrameWidget::onSend()
         return;
     }
 
-    quint8 data[8] = {0};
+    QByteArray data;
     for (int i = 0; i < dataList.size(); ++i) {
         quint32 byte = dataList[i].toUInt(&ok, 16);
         if (!ok || byte > 0xFF) {
@@ -237,23 +316,19 @@ void FrameWidget::onSend()
             sendBtn->setEnabled(true);
             return;
         }
-        data[i] = static_cast<quint8>(byte);
+        data.append(static_cast<char>(byte));
     }
 
-    // --- All inputs valid: build frame and emit ---
-    // Connection check (server running / client connected) is handled
+    CANFrame frame(id, static_cast<quint16>(getEffectiveDlc()), data, m_canType, m_idFormat);
 
-    CANFrame frame(id, dlcSpin->value(), data);
-    if(periodicCheckBox->isChecked()) {
-        // by MainWindow::onSendFramePeriodic() after receiving this signal.
+    if (periodicCheckBox->isChecked()) {
         emit onSendFramePeriodicClicked(frame, intervalSpin->value());
         sendBtn->setVisible(false);
         stopBtn->setVisible(true);
         stopBtn->setEnabled(true);
         statusLabel->setText(QString("✓ Sending ID: 0x%1").arg(id, 0, 16));
         statusLabel->setStyleSheet("QLabel { color: green; }");
-    }else {
-        // by MainWindow::onFrameSendOnce() after receiving this signal.
+    } else {
         emit sendOnceClicked(frame);
         sendBtn->setVisible(true);
         stopBtn->setVisible(false);
@@ -261,18 +336,20 @@ void FrameWidget::onSend()
         statusLabel->setText(QString("✓ Sent ID: 0x%1").arg(id, 0, 16));
         statusLabel->setStyleSheet("QLabel { color: green; }");
     }
-
 }
-void FrameWidget::onStopFramePeriodic(){
 
+void FrameWidget::onStopFramePeriodic()
+{
     sendBtn->setEnabled(false);
     stopBtn->setEnabled(false);
-    // --- Validate CAN ID ---
+
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 id = idText.toUInt(&ok, 16);
-    if (!ok || id > 0x1FFFFFFF) {   // 29-bit extended CAN ID max
-        statusLabel->setText("✗ Error: Invalid CAN ID (max 0x1FFFFFFF)");
+    quint32 maxId = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                        : CANFrame::ID_MAX_EXTENDED;
+    if (!ok || id > maxId) {
+        statusLabel->setText(QString("✗ Error: Invalid CAN ID (max 0x%1)").arg(maxId, 0, 16));
         statusLabel->setStyleSheet("QLabel { color: red; }");
         stopBtn->setEnabled(true);
         return;
@@ -284,8 +361,8 @@ void FrameWidget::onStopFramePeriodic(){
     sendBtn->setVisible(true);
     statusLabel->setText(QString("✓ Stopped ID: 0x%1").arg(id, 0, 16));
     statusLabel->setStyleSheet("QLabel { color: grey; }");
-
 }
+
 void FrameWidget::onPeriodicToggled()
 {
     if (periodicCheckBox->isChecked()) {
@@ -313,9 +390,10 @@ void FrameWidget::onCanIdChanged()
     bool ok;
     QString idText = canIdEdit->text().remove("0x", Qt::CaseInsensitive);
     quint32 newId = idText.toUInt(&ok, 16);
+    quint32 maxId = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                        : CANFrame::ID_MAX_EXTENDED;
 
-    if (!ok || newId > 0x1FFFFFFF) {
-        // Invalid ID - revert to old
+    if (!ok || newId > maxId) {
         canIdEdit->setText(QString("0x%1").arg(currentCanId, 0, 16));
         return;
     }
@@ -325,37 +403,42 @@ void FrameWidget::onCanIdChanged()
         currentCanId = newId;
         emit canIdChanged(oldId, newId);
 
-        // Update group box title
         QGroupBox* box = findChild<QGroupBox*>();
-        if (box) {
+        if (box)
             box->setTitle(QString("Frame ID: 0x%1").arg(newId, 0, 16));
-        }
     }
 }
 
 void FrameWidget::onDataChanged(const QString& text)
 {
-    // Block signals to prevent infinite loop
     dataEdit->blockSignals(true);
 
     int cursorPos = dataEdit->cursorPosition();
     QString formatted = formatHexWithSpaces(text);
 
-    // Calculate cursor adjustment
     int spacesBefore = text.first(qMin(cursorPos, text.length())).count(' ');
-    int adjustedPos = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
-    int spacesAfter = formatted.first(adjustedPos).count(' ');
+    int adjustedPos  = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
+    int spacesAfter  = formatted.first(adjustedPos).count(' ');
 
     dataEdit->setText(formatted);
     dataEdit->setCursorPosition(cursorPos + (spacesAfter - spacesBefore));
 
     dataEdit->blockSignals(false);
 
-    // Auto-update DLC
+    // Auto-update DLC based on byte count
     QString cleaned = formatted;
     cleaned.remove(' ');
     int byteCount = (cleaned.length() + 1) / 2;
-    dlcSpin->setValue(qMin(byteCount, 8));
+
+    if (m_canType == CanType::FD) {
+        // Snap to nearest valid FD DLC code (rounds up)
+        int dlcCode = CANFrame::bytesToFdDlc(byteCount);
+        dlcComboFD->setCurrentIndex(dlcCode);
+    } else if (m_canType == CanType::XL) {
+        dlcSpin->setValue(qMin(byteCount, 2048));
+    } else {
+        dlcSpin->setValue(qMin(byteCount, 8));
+    }
 }
 
 QString FrameWidget::formatHexWithSpaces(const QString& input)
@@ -365,9 +448,8 @@ QString FrameWidget::formatHexWithSpaces(const QString& input)
 
     QString formatted;
     for (int i = 0; i < cleaned.length(); i++) {
-        if (i > 0 && i % 2 == 0) {
+        if (i > 0 && i % 2 == 0)
             formatted += ' ';
-        }
         formatted += cleaned[i];
     }
 

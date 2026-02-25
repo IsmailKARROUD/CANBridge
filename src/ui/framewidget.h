@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QComboBox>
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
@@ -14,12 +15,8 @@
  * @class FrameWidget
  * @brief Widget representing a single configurable CAN frame in the Simulator tab.
  *
- * Provides controls for:
- *  - CAN ID (hex input)
- *  - DLC (0-8)
- *  - Data bytes (auto-formatted hex)
- *  - Periodic transmission checkbox with interval
- *  - Send Once, Hide, and Remove buttons
+ * Supports CAN Classic, CAN-FD, and CAN-XL bus modes as well as Standard
+ * (11-bit) and Extended (29-bit) CAN ID formats.
  */
 class FrameWidget : public QWidget
 {
@@ -41,14 +38,12 @@ public:
     /**
      * @brief Enforce a minimum periodic interval matching the timer resolution.
      * @param ms Minimum allowed interval in milliseconds.
-     * Clamps the current intervalSpin value up if it is below the new minimum.
      */
     void setMinInterval(int ms);
 
     /**
      * @brief Enforce a maximum periodic interval from the Settings menu.
      * @param ms Maximum allowed interval in milliseconds. 0 = no upper limit.
-     * Clamps the current intervalSpin value down if it exceeds the new maximum.
      */
     void setMaxInterval(int ms);
 
@@ -56,32 +51,35 @@ public:
     void setIntervalValue(int ms);
 
     /**
+     * @brief Configure the widget for the given CAN bus type.
+     *
+     * - Classic: shows dlcSpin (0-8), hides dlcComboFD, data limit 8 bytes
+     * - FD:      hides dlcSpin, shows dlcComboFD {0..8,12,16,20,24,32,48,64}, data limit 64 bytes
+     * - XL:      shows dlcSpin (0-2048), hides dlcComboFD, data limit 2048 bytes
+     */
+    void setCanType(CanType type);
+
+    /**
+     * @brief Configure the widget for the given CAN ID format.
+     * Updates the maximum CAN ID validated on send.
+     */
+    void setIdFormat(IdFormat fmt);
+
+    /// Returns the active DLC code (index for FD, value for Classic/XL).
+    int getEffectiveDlc() const;
+
+    /// Returns the actual maximum data byte count for the current DLC selection.
+    int getEffectiveDataBytes() const;
+
+    /**
      * @brief Provide a live connection-state checker to this widget.
-     *
-     * The supplied callable is invoked each time the user clicks Send to
-     * determine whether a server is listening or a client is connected.
-     * Using a std::function keeps FrameWidget fully decoupled from
-     * TcpServer and TcpClient.
-     *
      * @param checker  A callable returning true when a connection is active.
-     *
-     * Example (MainWindow):
-     * @code
-     *   widget->setConnectionChecker([this]() {
-     *       return server->isListening() || client->isConnected();
-     *   });
-     * @endcode
      */
     void setConnectionChecker(std::function<bool()> checker);
 
     /**
-     * @brief Notify the widget whether a server or client connection is active.
-     *
-     * Called by MainWindow whenever the connection state changes (server
-     * start/stop, client connect/disconnect). onSendOnce() uses this flag
-     * to block transmission attempts when no connection is available.
-     *
-     * @param connected true if server is listening or client is connected.
+     * @brief Notify the widget whether a connection is active (fallback for
+     *        when no connection checker has been injected).
      */
     void setConnected(bool connected);
 
@@ -104,35 +102,26 @@ private slots:
     void onDataChanged(const QString& text);
 
 private:
-    /**
-     * @brief Check whether a connection is currently active.
-     *
-     * Invokes m_connectionChecker if one has been set. On failure, updates
-     * statusLabel with an error message and returns false so the caller
-     * can bail out immediately.
-     *
-     * @return true if connected, false otherwise.
-     */
     bool checkConnection();
-
     QString formatHexWithSpaces(const QString& input);
 
-    QLineEdit* canIdEdit;
-    QSpinBox* dlcSpin;
-    QLineEdit* dataEdit;
-    QCheckBox* periodicCheckBox;
-    QSpinBox* intervalSpin;
+    QLineEdit*   canIdEdit;
+    QSpinBox*    dlcSpin;       ///< Classic (0-8) and XL (0-2048) DLC spinner
+    QComboBox*   dlcComboFD;    ///< FD-only DLC combo (0,1,2,3,4,5,6,7,8,12,16,20,24,32,48,64)
+    QLineEdit*   dataEdit;
+    QCheckBox*   periodicCheckBox;
+    QSpinBox*    intervalSpin;
     QPushButton* sendBtn;
     QPushButton* stopBtn;
     QPushButton* hideBtn;
     QPushButton* removeBtn;
-    QLabel* statusLabel;
+    QLabel*      statusLabel;
 
     uint32_t currentCanId;
+    CanType  m_canType  = CanType::Classic;
+    IdFormat m_idFormat = IdFormat::Standard;
+    bool     m_connected = false;
 
-    /// Live connection checker injected by MainWindow via setConnectionChecker().
-    /// Returns true when a server is listening or the client is connected.
-    /// Null until setConnectionChecker() is called.
     std::function<bool()> m_connectionChecker;
 
 public:

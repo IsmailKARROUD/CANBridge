@@ -81,6 +81,12 @@ public:
     /// Change the periodic transmission timer tick interval (milliseconds).
     void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
 
+    /**
+     * @brief Broadcast a 3-byte settings packet [0xFF][CanType][IdFormat] to all
+     *        connected clients so they can adapt their UI to the server's bus mode.
+     */
+    void sendSettings(CanType type, IdFormat fmt);
+
 signals:
     /// Emitted when a new client connects. Provides the client's IP address.
     void clientConnected(const QString& address);

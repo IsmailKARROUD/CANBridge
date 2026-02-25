@@ -95,6 +95,12 @@ signals:
     /// Emitted after a frame is successfully written to the server socket.
     void frameSent(const CANFrame& frame);
 
+    /**
+     * @brief Emitted when the server broadcasts its CAN bus settings.
+     * The client should reconfigure its UI and FrameWidgets to match.
+     */
+    void settingsReceived(CanType type, IdFormat fmt);
+
 private slots:
     void onConnected();       ///< Handle successful TCP connection
     void onDisconnected();    ///< Handle TCP disconnection

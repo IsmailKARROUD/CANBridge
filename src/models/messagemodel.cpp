@@ -8,6 +8,7 @@
 
 #include "messagemodel.h"
 #include <QDateTime>
+#include <algorithm>
 
 // ============================================================================
 // Constructor
@@ -65,13 +66,19 @@ QVariant MessageModel::data(const QModelIndex &index, int role) const
             return entry.isSent ? "TX" : "RX";
         case 2:  // CAN ID in hex
             return QString("0x%1").arg(entry.frame.getId(), 3, 16, QChar('0')).toUpper();
-        case 3:  // Data Length Code
-            return entry.frame.getDlc();
+        case 3:  // Data Length Code — show actual byte count
+        {
+            const CANFrame& f = entry.frame;
+            if (f.getFrameType() == CanType::FD)
+                return CANFrame::fdDlcToBytes(f.getDlc());
+            return static_cast<int>(f.getDlc());
+        }
         case 4:  // Data payload as hex string
         {
+            const QByteArray& d = entry.frame.getData();
             QString dataStr;
-            for (int i = 0; i < entry.frame.getDlc(); ++i) {
-                dataStr += QString("%1 ").arg(entry.frame.getDataIndex(i), 2, 16, QChar('0')).toUpper();
+            for (int i = 0; i < d.size(); ++i) {
+                dataStr += QString("%1 ").arg(static_cast<quint8>(d[i]), 2, 16, QChar('0')).toUpper();
             }
             return dataStr.trimmed();
         }
@@ -164,4 +171,13 @@ void MessageModel::setTimestampFormat(const QString& format)
     if (!frames.isEmpty()) {
         emit dataChanged(index(0, 0), index(frames.size() - 1, 0));
     }
+}
+
+// ============================================================================
+// Direct frame access
+// ============================================================================
+
+const CANFrame& MessageModel::frameAt(int row) const
+{
+    return frames.at(row).frame;
 }

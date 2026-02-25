@@ -7,6 +7,7 @@
  */
 
 #include "tcpclient.h"
+#include <QDataStream>
 #include <QDateTime>
 
 // ============================================================================
@@ -127,29 +128,59 @@ void TcpClient::onError(QAbstractSocket::SocketError socketError)
 // ============================================================================
 
 /**
- * Attempt to extract a single 21-byte CAN frame from the receive buffer.
+ * Attempt to extract one packet from the receive buffer.
  *
- * Frame size breakdown:
- *   4 bytes (ID) + 1 byte (DLC) + 8 bytes (data) + 8 bytes (timestamp) = 21 bytes
+ * Two packet types are supported, distinguished by the first byte:
  *
- * @return true if a complete frame was parsed and emitted, false if
- *         the buffer does not yet contain a full frame.
+ *  0xFF  — Settings packet (3 bytes): [0xFF][CanType][IdFormat]
+ *          Emits settingsReceived() and returns true.
+ *
+ *  0x00-0x02 — CAN frame, two-phase:
+ *          Phase 1: read 18-byte header, extract DataLen.
+ *          Phase 2: wait for 18 + DataLen total bytes, deserialize,
+ *                   emit frameReceived() and return true.
+ *
+ * @return true if a packet was consumed, false if more data is needed.
  */
 bool TcpClient::parseFrame()
 {
-    const int frameSize = 21;
+    if (buffer.isEmpty())
+        return false;
 
-    if (buffer.size() < frameSize) {
-        return false;  // Not enough data for a complete frame
+    // --- Settings packet: first byte is 0xFF ---
+    if (static_cast<quint8>(buffer[0]) == 0xFF) {
+        if (buffer.size() < 3)
+            return false;  // Need all 3 bytes
+
+        CanType  ct  = static_cast<CanType> (static_cast<quint8>(buffer[1]));
+        IdFormat idf = static_cast<IdFormat>(static_cast<quint8>(buffer[2]));
+        buffer.remove(0, 3);
+        emit settingsReceived(ct, idf);
+        return true;
     }
 
-    // Extract exactly one frame from the front of the buffer
-    QByteArray frameData = buffer.left(frameSize);
+    // --- CAN frame: two-phase parsing ---
+    static constexpr int HEADER_SIZE = 18;
+    if (buffer.size() < HEADER_SIZE)
+        return false;
+
+    // Peek at DataLen (offset 8: after ct+idf+id+dlc = 8 bytes)
+    QDataStream peek(buffer);
+    peek.setVersion(QDataStream::Qt_6_0);
+    quint8  ct, idf;
+    quint32 peekId;
+    quint16 peekDlc, dataLen;
+    peek >> ct >> idf >> peekId >> peekDlc >> dataLen;
+
+    int totalSize = HEADER_SIZE + dataLen;
+    if (buffer.size() < totalSize)
+        return false;
+
+    QByteArray frameData = buffer.left(totalSize);
     CANFrame frame = CANFrame::deserialize(frameData);
-    buffer.remove(0, frameSize);
+    buffer.remove(0, totalSize);
 
     emit frameReceived(frame);
-
     return true;
 }
 

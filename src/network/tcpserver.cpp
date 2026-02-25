@@ -7,6 +7,7 @@
  */
 
 #include "tcpserver.h"
+#include <QDataStream>
 #include <QDateTime>
 
 // ============================================================================
@@ -85,6 +86,27 @@ void TcpServer::stopServer()
 // ============================================================================
 // Frame Transmission
 // ============================================================================
+
+/**
+ * Broadcast a 3-byte settings packet to every connected client.
+ * Packet layout: [0xFF: 1B][CanType: 1B][IdFormat: 1B]
+ * The 0xFF magic byte is distinct from the CanType values (0-2) that begin
+ * a normal CAN frame header, so clients can distinguish the two packet types.
+ */
+void TcpServer::sendSettings(CanType type, IdFormat fmt)
+{
+    QByteArray packet;
+    packet.append(static_cast<char>(0xFF));
+    packet.append(static_cast<char>(type));
+    packet.append(static_cast<char>(fmt));
+
+    for (auto* c : std::as_const(clients)) {
+        if (c->state() == QAbstractSocket::ConnectedState) {
+            c->write(packet);
+            c->flush();
+        }
+    }
+}
 
 /**
  * Broadcast a single CAN frame to every connected client.
@@ -228,33 +250,51 @@ void TcpServer::onSendPeriodicFrames()
 /**
  * Called when data arrives from a connected client.
  *
- * Incoming bytes are appended to the client's receive buffer. Complete
- * 21-byte frames are extracted, deserialized, and relayed to all OTHER
- * connected clients (gateway/bridge behavior). Each received frame also
- * emits frameReceived() so the UI can display it.
+ * Incoming bytes are appended to the client's receive buffer. Two-phase
+ * parsing extracts complete frames:
+ *  Phase 1: wait for 18-byte header, then read DataLen from it.
+ *  Phase 2: wait for 18 + DataLen total bytes, then deserialize.
+ *
+ * Complete frames are relayed to all OTHER clients (gateway behavior)
+ * and emitted via frameReceived() for the UI.
  */
 void TcpServer::onClientReadyRead()
 {
     QTcpSocket* client = qobject_cast<QTcpSocket*>(sender());
     if (!client) return;
 
-    // Append incoming data to this client's buffer
     clientBuffers[client].append(client->readAll());
 
-    // Each serialized CAN frame is exactly 21 bytes
-    const int frameSize = 21;
+    static constexpr int HEADER_SIZE = 18;
+    QByteArray& buf = clientBuffers[client];
 
-    // Extract and process all complete frames from the buffer
-    while (clientBuffers[client].size() >= frameSize) {
-        QByteArray frameData = clientBuffers[client].left(frameSize);
+    while (true) {
+        // Phase 1: need at least the 18-byte header
+        if (buf.size() < HEADER_SIZE)
+            break;
+
+        // Peek at DataLen (bytes 8-9 in the header, after ct+idf+id+dlc = 8 bytes)
+        QDataStream peek(buf);
+        peek.setVersion(QDataStream::Qt_6_0);
+        quint8  ct, idf;
+        quint32 peekId;
+        quint16 peekDlc, dataLen;
+        peek >> ct >> idf >> peekId >> peekDlc >> dataLen;
+
+        // Phase 2: need full header + data
+        int totalSize = HEADER_SIZE + dataLen;
+        if (buf.size() < totalSize)
+            break;
+
+        QByteArray frameData = buf.left(totalSize);
         CANFrame frame = CANFrame::deserialize(frameData);
-        clientBuffers[client].remove(0, frameSize);
+        buf.remove(0, totalSize);
 
-        // Relay frame to all OTHER clients (gateway behavior)
-        QByteArray data = frame.serialize();
+        // Relay to all OTHER connected clients (gateway behavior)
+        QByteArray serialized = frame.serialize();
         for (auto* c : std::as_const(clients)) {
             if (c != client && c->state() == QAbstractSocket::ConnectedState) {
-                c->write(data);
+                c->write(serialized);
                 c->flush();
             }
         }

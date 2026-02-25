@@ -65,6 +65,10 @@ public slots:
     /// Remove all frames from the model and reset the view.
     void clear();
 
+public:
+    /// Direct access to a stored frame (for conflict scanning).
+    const CANFrame& frameAt(int row) const;
+
 signals:
     /// Emitted after a frame is added, used to update the message count label.
     void frameAdded();

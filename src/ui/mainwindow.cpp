@@ -68,8 +68,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     // ==== Server signal connections ====
 
-    // Log when a remote client connects to our server
-    connect(server, &TcpServer::clientConnected, this, &MainWindow::onServerClientConnected);
+    // Log when a remote client connects to our server, and push current settings to it
+    connect(server, &TcpServer::clientConnected, this, [this](const QString& address) {
+        onServerClientConnected(address);
+        // Send current CAN settings to all connected clients (including the new one)
+        server->sendSettings(m_canType, m_idFormat);
+    });
 
     // Log when a remote client disconnects
     connect(server, &TcpServer::clientDisconnected, this, [this](const QString& address) {
@@ -115,6 +119,9 @@ MainWindow::MainWindow(QWidget *parent)
         addLogEvent(QString("Frame received - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
     });
 
+    // Apply CAN settings pushed by the server (silent — no downgrade dialog)
+    connect(client, &TcpClient::settingsReceived, this, &MainWindow::applySettingsFromServer);
+
     // Log frames sent by the client and update the simulator status label
     connect(client, &TcpClient::frameSent, this, [this](const CANFrame& frame) {
         addLogEvent(QString("Frame sent - ID: 0x%1").arg(frame.getId(), 0, 16), "Frame");
@@ -157,13 +164,16 @@ void MainWindow::setupConnectionTab()
 
 
     // -- Server section --
-    QGroupBox* serverGroup = new QGroupBox("Server");
+    serverGroup  = new QGroupBox("Server");
+    QVBoxLayout* serverVBox   = new QVBoxLayout(serverGroup);
+
+    // Row 1: port, status, start/stop
     QHBoxLayout* serverLayout = new QHBoxLayout();
 
     serverLayout->addWidget(new QLabel("Port:"));
     serverPortSpin = new QSpinBox();
-    serverPortSpin->setRange(1024, 65535);  // Valid non-privileged port range
-    serverPortSpin->setValue(5555);          // Default port
+    serverPortSpin->setRange(1024, 65535);
+    serverPortSpin->setValue(5555);
     serverLayout->addWidget(serverPortSpin);
 
     serverStatusIndicator = new QLabel("● Stopped");
@@ -177,17 +187,48 @@ void MainWindow::setupConnectionTab()
     startServerBtn->setStyleSheet("QPushButton { color: green; font-weight: bold; }");
     stopServerBtn = new QPushButton("Stop");
     stopServerBtn->setStyleSheet("QPushButton { color: grey; font-weight: bold; }");
-    stopServerBtn->setEnabled(false);       // Disabled until server is started
-    stopServerBtn->setVisible(false);       // hide until server is started
+    stopServerBtn->setEnabled(false);
+    stopServerBtn->setVisible(false);
     serverLayout->addWidget(startServerBtn);
     serverLayout->addWidget(stopServerBtn);
     serverLayout->addStretch();
 
-    serverGroup->setLayout(serverLayout);
+    serverVBox->addLayout(serverLayout);
+
+    // Row 2: CAN Bus Type and CAN ID Format
+    QHBoxLayout* canSettingsLayout = new QHBoxLayout();
+
+    canSettingsLayout->addWidget(new QLabel("CAN Bus Type:"));
+    canTypeCombo = new QComboBox();
+    canTypeCombo->addItems({"Classic  (8 bytes)", "FD  (64 bytes)", "XL  (2048 bytes)"});
+    canTypeCombo->setCurrentIndex(0);
+    canTypeCombo->setMaximumWidth(160);
+    canSettingsLayout->addWidget(canTypeCombo);
+
+    canSettingsLayout->addSpacing(20);
+
+    canSettingsLayout->addWidget(new QLabel("CAN ID Format:"));
+    idFormatCombo = new QComboBox();
+    idFormatCombo->addItems({"Standard  (11-bit)", "Extended  (29-bit)"});
+    idFormatCombo->setCurrentIndex(0);
+    idFormatCombo->setMaximumWidth(160);
+    canSettingsLayout->addWidget(idFormatCombo);
+
+    canSettingsLayout->addStretch();
+    serverVBox->addLayout(canSettingsLayout);
+
     mainLayout->addWidget(serverGroup);
 
+    // Wire CAN settings combos — use activated() so programmatic setCurrentIndex doesn't re-trigger
+    connect(canTypeCombo, QOverload<int>::of(&QComboBox::activated), this, [this](int idx) {
+        applyCanType(static_cast<CanType>(idx));
+    });
+    connect(idFormatCombo, QOverload<int>::of(&QComboBox::activated), this, [this](int idx) {
+        applyIdFormat(static_cast<IdFormat>(idx));
+    });
+
     // -- Client section --
-    QGroupBox* clientGroup = new QGroupBox("Client");
+    clientGroup = new QGroupBox("Client");
     QHBoxLayout* clientLayout = new QHBoxLayout();
 
     clientLayout->addWidget(new QLabel("Host:"));
@@ -215,7 +256,15 @@ void MainWindow::setupConnectionTab()
     clientLayout->addWidget(disconnectBtn);
     clientLayout->addStretch();
 
-    clientGroup->setLayout(clientLayout);
+    // Label showing server-pushed bus settings (only visible when connected)
+    clientBusModeLabel = new QLabel("");
+    clientBusModeLabel->setStyleSheet("QLabel { color: gray; font-style: italic; }");
+    clientBusModeLabel->setVisible(false);
+
+    QVBoxLayout* clientVBox = new QVBoxLayout(clientGroup);
+    clientVBox->addLayout(clientLayout);
+    clientVBox->addWidget(clientBusModeLabel);
+
     mainLayout->addWidget(clientGroup);
 
     mainLayout->addStretch();
@@ -345,11 +394,12 @@ void MainWindow::setupSimulatorTab()
 
     // -- Wire global button signals --
     connect(addFrameBtn, &QPushButton::clicked, this, [this]() {
-        // Find next available ID
+        // Find next available ID (respects current ID format)
+        uint32_t maxId = (m_idFormat == IdFormat::Standard) ? 0x7FF : 0x1FFFFFFF;
         uint32_t nextId = 0x100;
         while (frameWidgets.contains(nextId)) {
             nextId++;
-            if (nextId > 0x7FF) nextId = 0x100;  // Wrap around standard CAN IDs
+            if (nextId > maxId) nextId = 0x100;
         }
         addFrameWidget(nextId);
     });
@@ -437,10 +487,11 @@ void MainWindow::setupSimulatorTab()
 void MainWindow::addFrameWidget(uint32_t defaultId)
 {
     // Find unique ID if default is taken
+    uint32_t maxId = (m_idFormat == IdFormat::Standard) ? 0x7FF : 0x1FFFFFFF;
     uint32_t canId = defaultId;
     while (frameWidgets.contains(canId)) {
         canId++;
-        if (canId > 0x7FF) canId = 0x100;  // Wrap around
+        if (canId > maxId) canId = 0x100;  // Wrap around
     }
 
     FrameWidget* widget = new FrameWidget(canId);
@@ -457,6 +508,10 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
     widget->setMinInterval(m_timerResolutionMs);
     widget->setMaxInterval(m_maxIntervalMs);
     widget->setIntervalValue(qMax(100, m_timerResolutionMs));
+
+    // Apply current global CAN type and ID format
+    widget->setCanType(m_canType);
+    widget->setIdFormat(m_idFormat);
 
     // Insert before the stretch spacer
     framesLayout->insertWidget(framesLayout->count() - 1, widget);
@@ -737,6 +792,9 @@ void MainWindow::onStartServer()
         stopServerBtn->setEnabled(true);
         stopServerBtn->setVisible(true);
         serverPortSpin->setEnabled(false);  // Lock port while server is running
+        canTypeCombo->setEnabled(false);
+        idFormatCombo->setEnabled(false);
+        clientGroup->setEnabled(false);     // Disable client while server is running
 
         addLogEvent(QString("Server started on port %1").arg(serverPortSpin->value()), "Server");
     } else {
@@ -759,6 +817,9 @@ void MainWindow::onStopServer()
     stopServerBtn->setEnabled(false);
     stopServerBtn->setVisible(false);
     serverPortSpin->setEnabled(true);  // Unlock port for reconfiguration
+    canTypeCombo->setEnabled(true);
+    idFormatCombo->setEnabled(true);
+    clientGroup->setEnabled(true);     // Re-enable client when server stops
 
     addLogEvent("Server stopped", "Server");
 }
@@ -793,6 +854,7 @@ void MainWindow::onClientConnected()
     disconnectBtn->setVisible(true);
     hostEdit->setEnabled(false);        // Lock inputs while connected
     clientPortSpin->setEnabled(false);
+    serverGroup->setEnabled(false);     // Disable server while client is connected
 
     addLogEvent(QString("Connected to %1:%2").arg(hostEdit->text()).arg(clientPortSpin->value()), "Client");
 }
@@ -811,7 +873,9 @@ void MainWindow::onClientDisconnected()
     disconnectBtn->setVisible(false);
     hostEdit->setEnabled(true);         // Unlock inputs for reconfiguration
     clientPortSpin->setEnabled(true);
+    serverGroup->setEnabled(true);      // Re-enable server when client disconnects
 
+    clientBusModeLabel->setVisible(false);
     addLogEvent("Disconnected from server", "Client");
 }
 
@@ -852,14 +916,24 @@ void MainWindow::onSaveFrames()
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
 
     QTextStream out(&file);
-    out << "Timestamp,Dir,ID,DLC,Data\n";  // CSV header
+    out << "Timestamp,Dir,ID,DLC,Data,FrameType,IDFormat\n";  // 7-column CSV header
 
     // Write each frame as a CSV row
     for (int i = 0; i < messageModel->rowCount(); ++i) {
         for (int j = 0; j < 5; ++j) {
             out << messageModel->data(messageModel->index(i, j)).toString();
-            if (j < 4) out << ",";
+            out << ",";
         }
+        const CANFrame& f = messageModel->frameAt(i);
+        // FrameType column
+        switch (f.getFrameType()) {
+        case CanType::Classic: out << "Classic"; break;
+        case CanType::FD:      out << "FD";      break;
+        case CanType::XL:      out << "XL";      break;
+        }
+        out << ",";
+        // IDFormat column
+        out << (f.getIdFormat() == IdFormat::Standard ? "Standard" : "Extended");
         out << "\n";
     }
 
@@ -889,37 +963,286 @@ void MainWindow::onLoadFrames()
     int frameCount = 0;
     while (!in.atEnd()) {
         QString line = in.readLine();
-        QStringList fields = line.split(',', Qt::SkipEmptyParts);
+        QStringList fields = line.split(',');
 
         if (fields.size() < 5) continue;  // Skip malformed rows
 
         // Parse CAN ID
         bool ok;
-        QString idText = fields[2].remove("0x", Qt::CaseInsensitive);
+        QString idText = fields[2].trimmed().remove("0x", Qt::CaseInsensitive);
         quint32 id = idText.toUInt(&ok, 16);
         if (!ok || id > 0x1FFFFFFF) continue;
 
         // Parse DLC
-        quint8 dlc = fields[3].toUInt(&ok, 10);
+        quint16 dlc = static_cast<quint16>(fields[3].trimmed().toUInt(&ok, 10));
         if (!ok) continue;
 
         // Parse data bytes
-        QStringList dataList = fields[4].split(' ', Qt::SkipEmptyParts);
-        if (dataList.size() > 8) continue;
+        QStringList dataList = fields[4].trimmed().split(' ', Qt::SkipEmptyParts);
+        QByteArray data;
+        bool dataOk = true;
+        for (const QString& hexByte : std::as_const(dataList)) {
+            quint32 byte = hexByte.toUInt(&ok, 16);
+            if (!ok || byte > 0xFF) { dataOk = false; break; }
+            data.append(static_cast<char>(byte));
+        }
+        if (!dataOk) continue;
 
-        quint8 data[8] = {0};
-        for (int i = 0; i < dataList.size(); ++i) {
-            quint32 byte = dataList[i].toUInt(&ok, 16);
-            if (!ok || byte > 0xFF) continue;
-            data[i] = static_cast<quint8>(byte);
+        // Parse FrameType and IDFormat (new 7-column format; default to Classic/Standard for old files)
+        CanType  frameType = CanType::Classic;
+        IdFormat idFmt     = IdFormat::Standard;
+        if (fields.size() >= 7) {
+            QString ft = fields[5].trimmed();
+            if (ft == "FD")      frameType = CanType::FD;
+            else if (ft == "XL") frameType = CanType::XL;
+
+            QString idf = fields[6].trimmed();
+            if (idf == "Extended") idFmt = IdFormat::Extended;
         }
 
-        CANFrame frame(id, dlc, data);
-        messageModel->addFrame(frame,fields[1]=="TX");
+        CANFrame frame(id, dlc, data, frameType, idFmt);
+        messageModel->addFrame(frame, fields[1].trimmed() == "TX");
         frameCount++;
     }
 
     addLogEvent(QString("Loaded %1 frames from %2").arg(frameCount).arg(filename), "Frame");
+}
+
+// ============================================================================
+// CAN Type / ID Format — Apply helpers
+// ============================================================================
+
+bool MainWindow::isDowngrade(CanType from, CanType to) const
+{
+    return static_cast<int>(to) < static_cast<int>(from);
+}
+
+bool MainWindow::isDowngrade(IdFormat from, IdFormat to) const
+{
+    return static_cast<int>(to) < static_cast<int>(from);
+}
+
+/**
+ * Returns the maximum data payload in bytes for a given CanType.
+ */
+static int maxBytesForType(CanType t)
+{
+    switch (t) {
+    case CanType::Classic: return 8;
+    case CanType::FD:      return 64;
+    case CanType::XL:      return 2048;
+    }
+    return 8;
+}
+
+bool MainWindow::analyzerHasConflicts(CanType newType, IdFormat newFmt) const
+{
+    int      maxBytes = maxBytesForType(newType);
+    quint32  maxId    = (newFmt == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                        : CANFrame::ID_MAX_EXTENDED;
+    for (int i = 0; i < messageModel->rowCount(); ++i) {
+        const CANFrame& f = messageModel->frameAt(i);
+        if (f.getData().size() > maxBytes || f.getId() > maxId)
+            return true;
+    }
+    return false;
+}
+
+bool MainWindow::simulatorHasConflicts(CanType newType, IdFormat newFmt) const
+{
+    int      maxBytes = maxBytesForType(newType);
+    quint32  maxId    = (newFmt == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                        : CANFrame::ID_MAX_EXTENDED;
+    for (auto* widget : std::as_const(frameWidgets)) {
+        CANFrame f = widget->getFrame();
+        if (f.getData().size() > maxBytes || f.getId() > maxId)
+            return true;
+    }
+    return false;
+}
+
+/**
+ * Propagate a new CanType globally:
+ *  - If upgrading: apply silently.
+ *  - If downgrading with conflicts: show Clear All / Cancel dialog.
+ *  - If Cancel: restore the previous combo index and return.
+ */
+void MainWindow::applyCanType(CanType newType)
+{
+    if (isDowngrade(m_canType, newType)) {
+        bool analyzerConflict  = analyzerHasConflicts(newType, m_idFormat);
+        bool simulatorConflict = simulatorHasConflicts(newType, m_idFormat);
+
+        if (analyzerConflict || simulatorConflict) {
+            int  maxBytes = maxBytesForType(newType);
+            QString typeName = (newType == CanType::Classic) ? "CAN Classic"
+                             : (newType == CanType::FD)      ? "CAN-FD"
+                             :                                 "CAN-XL";
+            QString fromName = (m_canType == CanType::Classic) ? "CAN Classic"
+                             : (m_canType == CanType::FD)      ? "CAN-FD"
+                             :                                   "CAN-XL";
+
+            // Count conflicts for the warning message
+            int analyzerCount = 0, simulatorCount = 0;
+            quint32 maxId = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                                : CANFrame::ID_MAX_EXTENDED;
+            for (int i = 0; i < messageModel->rowCount(); ++i) {
+                const CANFrame& f = messageModel->frameAt(i);
+                if (f.getData().size() > maxBytes || f.getId() > maxId) analyzerCount++;
+            }
+            for (auto* w : std::as_const(frameWidgets)) {
+                CANFrame f = w->getFrame();
+                if (f.getData().size() > maxBytes || f.getId() > maxId) simulatorCount++;
+            }
+
+            QString msg = QString("Downgrading from %1 to %2 will affect:\n").arg(fromName, typeName);
+            if (analyzerCount)  msg += QString("  • %1 Analyzer frame(s) with data > %2 bytes\n").arg(analyzerCount).arg(maxBytes);
+            if (simulatorCount) msg += QString("  • %1 Simulator frame(s) with data > %2 bytes\n").arg(simulatorCount).arg(maxBytes);
+            msg += "\nConflicting frames will be cleared.";
+
+            QMessageBox dlg(this);
+            dlg.setWindowTitle("CAN Bus Type Downgrade");
+            dlg.setText(msg);
+            QPushButton* clearAllBtn  = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+            QPushButton* cancelBtn    = dlg.addButton("Cancel",    QMessageBox::RejectRole);
+            Q_UNUSED(cancelBtn);
+            dlg.setDefaultButton(clearAllBtn);
+            dlg.exec();
+
+            QAbstractButton* clicked = dlg.clickedButton();
+            if (clicked == cancelBtn) {
+                // Restore combo to reflect the unchanged setting
+                canTypeCombo->setCurrentIndex(static_cast<int>(m_canType));
+                return;
+            }
+
+            if (clicked == clearAllBtn) {
+                messageModel->clear();
+                QList<uint32_t> toRemove;
+                for (auto it = frameWidgets.cbegin(); it != frameWidgets.cend(); ++it) {
+                    CANFrame f = it.value()->getFrame();
+                    if (f.getData().size() > static_cast<qsizetype>(maxBytes) || f.getId() > maxId)
+                        toRemove.append(it.key());
+                }
+                for (uint32_t id : toRemove)
+                    onFrameRemove(id);
+            }
+        }
+    }
+
+    // Apply to all widgets
+    m_canType = newType;
+    canTypeCombo->setCurrentIndex(static_cast<int>(newType));
+    for (auto* w : std::as_const(frameWidgets))
+        w->setCanType(newType);
+
+    // Push new settings to all connected clients
+    if (server->isListening())
+        server->sendSettings(m_canType, m_idFormat);
+
+    addLogEvent(QString("CAN bus type changed to: %1")
+                    .arg(newType == CanType::Classic ? "Classic"
+                       : newType == CanType::FD      ? "FD"
+                       :                               "XL"), "Server");
+}
+
+/**
+ * Propagate a new IdFormat globally, showing a downgrade dialog if needed.
+ */
+void MainWindow::applyIdFormat(IdFormat newFmt)
+{
+    if (isDowngrade(m_idFormat, newFmt)) {
+        bool analyzerConflict  = analyzerHasConflicts(m_canType, newFmt);
+        bool simulatorConflict = simulatorHasConflicts(m_canType, newFmt);
+
+        if (analyzerConflict || simulatorConflict) {
+            quint32 maxId    = (newFmt == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                               : CANFrame::ID_MAX_EXTENDED;
+            int     maxBytes = maxBytesForType(m_canType);
+            QString fmtName  = (newFmt == IdFormat::Standard) ? "Standard (11-bit)" : "Extended (29-bit)";
+
+            int analyzerCount = 0, simulatorCount = 0;
+            for (int i = 0; i < messageModel->rowCount(); ++i) {
+                if (messageModel->frameAt(i).getId() > maxId) analyzerCount++;
+            }
+            for (auto* w : std::as_const(frameWidgets)) {
+                if (w->getFrame().getId() > maxId) simulatorCount++;
+            }
+
+            QString msg = QString("Downgrading to %1 will affect:\n").arg(fmtName);
+            if (analyzerCount)  msg += QString("  • %1 Analyzer frame(s) with ID > 0x%2\n").arg(analyzerCount).arg(maxId, 0, 16);
+            if (simulatorCount) msg += QString("  • %1 Simulator frame(s) with ID > 0x%2\n").arg(simulatorCount).arg(maxId, 0, 16);
+            msg += "\nConflicting frames will be cleared.";
+
+            QMessageBox dlg(this);
+            dlg.setWindowTitle("CAN ID Format Downgrade");
+            dlg.setText(msg);
+            QPushButton* clearAllBtn = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+            QPushButton* cancelBtn   = dlg.addButton("Cancel",    QMessageBox::RejectRole);
+            Q_UNUSED(cancelBtn);
+            dlg.setDefaultButton(clearAllBtn);
+            dlg.exec();
+
+            QAbstractButton* clicked = dlg.clickedButton();
+            if (clicked == cancelBtn) {
+                idFormatCombo->setCurrentIndex(static_cast<int>(m_idFormat));
+                return;
+            }
+
+            if (clicked == clearAllBtn) {
+                messageModel->clear();
+                QList<uint32_t> toRemove;
+                for (auto it = frameWidgets.cbegin(); it != frameWidgets.cend(); ++it) {
+                    if (it.value()->getFrame().getId() > maxId)
+                        toRemove.append(it.key());
+                }
+                for (uint32_t id : toRemove)
+                    onFrameRemove(id);
+            }
+        }
+    }
+
+    m_idFormat = newFmt;
+    idFormatCombo->setCurrentIndex(static_cast<int>(newFmt));
+    for (auto* w : std::as_const(frameWidgets))
+        w->setIdFormat(newFmt);
+
+    // Push new settings to all connected clients
+    if (server->isListening())
+        server->sendSettings(m_canType, m_idFormat);
+
+    addLogEvent(QString("CAN ID format changed to: %1")
+                    .arg(newFmt == IdFormat::Standard ? "Standard (11-bit)" : "Extended (29-bit)"), "Server");
+}
+
+/**
+ * Apply CAN settings received from a remote server — no downgrade dialog,
+ * no re-broadcast. Updates all widgets and the connection-tab labels.
+ */
+void MainWindow::applySettingsFromServer(CanType type, IdFormat fmt)
+{
+    m_canType  = type;
+    m_idFormat = fmt;
+
+    // Sync the server-side combos so the display is consistent
+    canTypeCombo->setCurrentIndex(static_cast<int>(type));
+    idFormatCombo->setCurrentIndex(static_cast<int>(fmt));
+
+    // Update all simulator widgets
+    for (auto* w : std::as_const(frameWidgets)) {
+        w->setCanType(type);
+        w->setIdFormat(fmt);
+    }
+
+    // Show received settings in the client group
+    QString typeName = (type == CanType::Classic) ? "Classic"
+                     : (type == CanType::FD)      ? "FD"
+                     :                              "XL";
+    QString fmtName  = (fmt == IdFormat::Standard) ? "Standard (11-bit)" : "Extended (29-bit)";
+    clientBusModeLabel->setText(QString("Server bus mode: CAN %1 / %2").arg(typeName, fmtName));
+    clientBusModeLabel->setVisible(true);
+
+    addLogEvent(QString("Received server settings: CAN %1 / %2").arg(typeName, fmtName), "Client");
 }
 
 // ============================================================================

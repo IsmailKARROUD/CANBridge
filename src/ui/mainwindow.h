@@ -28,6 +28,7 @@
 #include <QMap>
 #include <QScrollArea>
 #include <QMessageBox>
+#include <QGroupBox>
 
 #include "tcpserver.h"
 #include "tcpclient.h"
@@ -106,17 +107,22 @@ private:
     QTabWidget* tabWidget;              ///< Central tab container
 
     // -- Connection tab: Server --
-    QSpinBox* serverPortSpin;           ///< Port number selector for the server
+    QGroupBox*   serverGroup;           ///< Server group box (disabled while client is connected)
+    QSpinBox*    serverPortSpin;        ///< Port number selector for the server
     QPushButton* startServerBtn;        ///< Button to start the server
     QPushButton* stopServerBtn;         ///< Button to stop the server
-    QLabel* serverStatusIndicator;      ///< Status label (Running/Stopped/Error)
+    QLabel*      serverStatusIndicator; ///< Status label (Running/Stopped/Error)
+    QComboBox*   canTypeCombo;          ///< CAN Bus Type selector (Classic / FD / XL)
+    QComboBox*   idFormatCombo;         ///< CAN ID Format selector (Standard / Extended)
 
     // -- Connection tab: Client --
-    QLineEdit* hostEdit;                ///< Server hostname/IP input field
-    QSpinBox* clientPortSpin;           ///< Port number selector for client connection
+    QGroupBox*   clientGroup;           ///< Client group box (disabled while server is running)
+    QLineEdit*   hostEdit;              ///< Server hostname/IP input field
+    QSpinBox*    clientPortSpin;        ///< Port number selector for client connection
     QPushButton* connectBtn;            ///< Button to connect to server
     QPushButton* disconnectBtn;         ///< Button to disconnect from server
-    QLabel* clientStatusIndicator;      ///< Status label (Connected/Disconnected/Error)
+    QLabel*      clientStatusIndicator; ///< Status label (Connected/Disconnected/Error)
+    QLabel*      clientBusModeLabel;    ///< Read-only display of settings received from server
 
     // -- Log tab --
     QComboBox* logFilterCombo;          ///< Dropdown for log category filtering
@@ -184,6 +190,33 @@ private:
 
     QAction* darkModeAction;            ///< Menu action for dark theme selection
     bool isDarkMode;                    ///< Current theme state
+
+    // ========================================================================
+    // CAN Type / ID Format (global settings)
+    // ========================================================================
+
+    CanType  m_canType  = CanType::Classic;
+    IdFormat m_idFormat = IdFormat::Standard;
+
+    /// Returns true if changing from @p from to @p to is a downgrade.
+    bool isDowngrade(CanType from, CanType to) const;
+    bool isDowngrade(IdFormat from, IdFormat to) const;
+
+    /// Returns true if any Analyzer frame conflicts with the new limits.
+    bool analyzerHasConflicts(CanType newType, IdFormat newFmt) const;
+    /// Returns true if any Simulator widget conflicts with the new limits.
+    bool simulatorHasConflicts(CanType newType, IdFormat newFmt) const;
+
+    /// Propagate a new CanType to all widgets, showing a downgrade dialog if needed.
+    /// On success, broadcasts the new settings to all connected clients.
+    void applyCanType(CanType type);
+
+    /// Propagate a new IdFormat to all widgets, showing a downgrade dialog if needed.
+    /// On success, broadcasts the new settings to all connected clients.
+    void applyIdFormat(IdFormat fmt);
+
+    /// Apply settings received from the server silently (no downgrade dialog).
+    void applySettingsFromServer(CanType type, IdFormat fmt);
 
     // ========================================================================
     // Other function
