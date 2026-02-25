@@ -122,7 +122,8 @@ private:
     QPushButton* connectBtn;            ///< Button to connect to server
     QPushButton* disconnectBtn;         ///< Button to disconnect from server
     QLabel*      clientStatusIndicator; ///< Status label (Connected/Disconnected/Error)
-    QLabel*      clientBusModeLabel;    ///< Read-only display of settings received from server
+    QLabel*      clientCanTypeLabel;    ///< Badge showing server CAN type (Classic/FD/XL)
+    QLabel*      clientIdFormatLabel;   ///< Badge showing server ID format (Standard/Extended)
 
     // -- Log tab --
     QComboBox* logFilterCombo;          ///< Dropdown for log category filtering

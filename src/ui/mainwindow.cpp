@@ -256,14 +256,23 @@ void MainWindow::setupConnectionTab()
     clientLayout->addWidget(disconnectBtn);
     clientLayout->addStretch();
 
-    // Label showing server-pushed bus settings (only visible when connected)
-    clientBusModeLabel = new QLabel("");
-    clientBusModeLabel->setStyleSheet("QLabel { color: gray; font-style: italic; }");
-    clientBusModeLabel->setVisible(false);
+    // Badge labels showing server-pushed bus settings (only visible when connected)
+    static const QString badgeBase = "QLabel { color: white; font-weight: bold; border-radius: 4px; padding: 2px 10px; }";
+    clientCanTypeLabel  = new QLabel("");
+    clientCanTypeLabel->setStyleSheet(badgeBase);
+    clientCanTypeLabel->setVisible(false);
+    clientIdFormatLabel = new QLabel("");
+    clientIdFormatLabel->setStyleSheet(badgeBase);
+    clientIdFormatLabel->setVisible(false);
+
+    QHBoxLayout* badgeLayout = new QHBoxLayout();
+    badgeLayout->addWidget(clientCanTypeLabel);
+    badgeLayout->addWidget(clientIdFormatLabel);
+    badgeLayout->addStretch();
 
     QVBoxLayout* clientVBox = new QVBoxLayout(clientGroup);
     clientVBox->addLayout(clientLayout);
-    clientVBox->addWidget(clientBusModeLabel);
+    clientVBox->addLayout(badgeLayout);
 
     mainLayout->addWidget(clientGroup);
 
@@ -875,7 +884,8 @@ void MainWindow::onClientDisconnected()
     clientPortSpin->setEnabled(true);
     serverGroup->setEnabled(true);      // Re-enable server when client disconnects
 
-    clientBusModeLabel->setVisible(false);
+    clientCanTypeLabel->setVisible(false);
+    clientIdFormatLabel->setVisible(false);
     addLogEvent("Disconnected from server", "Client");
 }
 
@@ -1234,13 +1244,31 @@ void MainWindow::applySettingsFromServer(CanType type, IdFormat fmt)
         w->setIdFormat(fmt);
     }
 
-    // Show received settings in the client group
-    QString typeName = (type == CanType::Classic) ? "Classic"
-                     : (type == CanType::FD)      ? "FD"
-                     :                              "XL";
-    QString fmtName  = (fmt == IdFormat::Standard) ? "Standard (11-bit)" : "Extended (29-bit)";
-    clientBusModeLabel->setText(QString("Server bus mode: CAN %1 / %2").arg(typeName, fmtName));
-    clientBusModeLabel->setVisible(true);
+    // Show received settings as colored badges in the client group
+    QString typeText, typeColor;
+    if      (type == CanType::Classic) { typeText = "CAN Classic"; typeColor = "#2196F3"; }
+    else if (type == CanType::FD)      { typeText = "CAN-FD";      typeColor = "#FF9800"; }
+    else                               { typeText = "CAN-XL";      typeColor = "#9C27B0"; }
+
+    QString fmtText, fmtColor;
+    if (fmt == IdFormat::Standard) { fmtText = "Standard (11-bit)"; fmtColor = "#607D8B"; }
+    else                           { fmtText = "Extended (29-bit)"; fmtColor = "#009688"; }
+
+    auto badgeStyle = [](const QString& color) {
+        return QString("QLabel { color: white; font-weight: bold; border-radius: 4px;"
+                       " padding: 2px 10px; background-color: %1; }").arg(color);
+    };
+
+    clientCanTypeLabel->setText(typeText);
+    clientCanTypeLabel->setStyleSheet(badgeStyle(typeColor));
+    clientCanTypeLabel->setVisible(true);
+
+    clientIdFormatLabel->setText(fmtText);
+    clientIdFormatLabel->setStyleSheet(badgeStyle(fmtColor));
+    clientIdFormatLabel->setVisible(true);
+
+    QString typeName = typeText;
+    QString fmtName  = fmtText;
 
     addLogEvent(QString("Received server settings: CAN %1 / %2").arg(typeName, fmtName), "Client");
 }
