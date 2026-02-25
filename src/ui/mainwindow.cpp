@@ -27,6 +27,9 @@
 #include "mainwindow.h"
 #include "aboutdialog.h"
 
+// Forward declaration of file-scope helper (defined in the Apply helpers section)
+static int maxBytesForType(CanType t);
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -616,6 +619,15 @@ void MainWindow::onFrameSendOnce(const CANFrame& frame)
         return;
     }
 
+    int     maxBytes = maxBytesForType(m_canType);
+    quint32 maxId    = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                          : CANFrame::ID_MAX_EXTENDED;
+    if (frame.getData().size() > static_cast<qsizetype>(maxBytes) || frame.getId() > maxId) {
+        addLogEvent(QString("Error: Frame 0x%1 exceeds current bus limits — not sent")
+                        .arg(frame.getId(), 0, 16), "Frame");
+        return;
+    }
+
     if (server->isListening()) {
         server->sendFrame(frame);
     } else if (client->isConnected()) {
@@ -631,6 +643,15 @@ void MainWindow::onSendFramePeriodic(const CANFrame& frame, int intervalMs)
 
 
         // Start periodic transmission
+        int     maxBytes = maxBytesForType(m_canType);
+        quint32 maxId    = (m_idFormat == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                              : CANFrame::ID_MAX_EXTENDED;
+        if (frame.getData().size() > static_cast<qsizetype>(maxBytes) || frame.getId() > maxId) {
+            addLogEvent(QString("Error: Frame 0x%1 exceeds current bus limits — periodic not started")
+                            .arg(frame.getId(), 0, 16), "Frame");
+            return;
+        }
+
         if (server->isListening()) {
             server->addPeriodicFrame(frame, intervalMs);
             addLogEvent(QString("Started periodic: ID 0x%1, %2ms")
@@ -1108,15 +1129,16 @@ void MainWindow::applyCanType(CanType newType)
             QString msg = QString("Downgrading from %1 to %2 will affect:\n").arg(fromName, typeName);
             if (analyzerCount)  msg += QString("  • %1 Analyzer frame(s) with data > %2 bytes\n").arg(analyzerCount).arg(maxBytes);
             if (simulatorCount) msg += QString("  • %1 Simulator frame(s) with data > %2 bytes\n").arg(simulatorCount).arg(maxBytes);
-            msg += "\nConflicting frames will be cleared.";
+            msg += "\nChoose how to handle conflicting frames:";
 
             QMessageBox dlg(this);
             dlg.setWindowTitle("CAN Bus Type Downgrade");
             dlg.setText(msg);
             QPushButton* clearAllBtn  = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+            QPushButton* keepBtn      = dlg.addButton("Keep",      QMessageBox::AcceptRole);
             QPushButton* cancelBtn    = dlg.addButton("Cancel",    QMessageBox::RejectRole);
-            Q_UNUSED(cancelBtn);
-            dlg.setDefaultButton(clearAllBtn);
+            Q_UNUSED(keepBtn);
+            dlg.setDefaultButton(cancelBtn);
             dlg.exec();
 
             QAbstractButton* clicked = dlg.clickedButton();
@@ -1137,6 +1159,7 @@ void MainWindow::applyCanType(CanType newType)
                 for (uint32_t id : toRemove)
                     onFrameRemove(id);
             }
+            // "Keep": conflicting frames are retained; send-time validation will reject them
         }
     }
 
@@ -1182,15 +1205,16 @@ void MainWindow::applyIdFormat(IdFormat newFmt)
             QString msg = QString("Downgrading to %1 will affect:\n").arg(fmtName);
             if (analyzerCount)  msg += QString("  • %1 Analyzer frame(s) with ID > 0x%2\n").arg(analyzerCount).arg(maxId, 0, 16);
             if (simulatorCount) msg += QString("  • %1 Simulator frame(s) with ID > 0x%2\n").arg(simulatorCount).arg(maxId, 0, 16);
-            msg += "\nConflicting frames will be cleared.";
+            msg += "\nChoose how to handle conflicting frames:";
 
             QMessageBox dlg(this);
             dlg.setWindowTitle("CAN ID Format Downgrade");
             dlg.setText(msg);
             QPushButton* clearAllBtn = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+            QPushButton* keepBtn     = dlg.addButton("Keep",      QMessageBox::AcceptRole);
             QPushButton* cancelBtn   = dlg.addButton("Cancel",    QMessageBox::RejectRole);
-            Q_UNUSED(cancelBtn);
-            dlg.setDefaultButton(clearAllBtn);
+            Q_UNUSED(keepBtn);
+            dlg.setDefaultButton(cancelBtn);
             dlg.exec();
 
             QAbstractButton* clicked = dlg.clickedButton();
@@ -1209,6 +1233,7 @@ void MainWindow::applyIdFormat(IdFormat newFmt)
                 for (uint32_t id : toRemove)
                     onFrameRemove(id);
             }
+            // "Keep": conflicting frames are retained; send-time validation will reject them
         }
     }
 
