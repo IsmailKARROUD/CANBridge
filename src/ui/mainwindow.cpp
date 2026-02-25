@@ -1226,11 +1226,65 @@ void MainWindow::applyIdFormat(IdFormat newFmt)
 }
 
 /**
- * Apply CAN settings received from a remote server — no downgrade dialog,
- * no re-broadcast. Updates all widgets and the connection-tab labels.
+ * Apply CAN settings received from a remote server.
+ * If the server settings are a downgrade and there are conflicting local frames,
+ * prompt the user to clear them or keep them. Settings are always applied.
  */
 void MainWindow::applySettingsFromServer(CanType type, IdFormat fmt)
 {
+    // Check for conflicts before updating state (old values still valid here)
+    if (isDowngrade(m_canType, type) || isDowngrade(m_idFormat, fmt)) {
+        bool analyzerConflict  = analyzerHasConflicts(type, fmt);
+        bool simulatorConflict = simulatorHasConflicts(type, fmt);
+
+        if (analyzerConflict || simulatorConflict) {
+            int     maxBytes = maxBytesForType(type);
+            quint32 maxId    = (fmt == IdFormat::Standard) ? CANFrame::ID_MAX_STANDARD
+                                                           : CANFrame::ID_MAX_EXTENDED;
+            QString typeName = (type == CanType::Classic) ? "CAN Classic"
+                             : (type == CanType::FD)      ? "CAN-FD"
+                             :                              "CAN-XL";
+            QString fmtName  = (fmt == IdFormat::Standard) ? "Standard (11-bit)" : "Extended (29-bit)";
+
+            int analyzerCount = 0, simulatorCount = 0;
+            for (int i = 0; i < messageModel->rowCount(); ++i) {
+                const CANFrame& f = messageModel->frameAt(i);
+                if (f.getData().size() > static_cast<qsizetype>(maxBytes) || f.getId() > maxId)
+                    analyzerCount++;
+            }
+            for (auto it = frameWidgets.cbegin(); it != frameWidgets.cend(); ++it) {
+                CANFrame f = it.value()->getFrame();
+                if (f.getData().size() > static_cast<qsizetype>(maxBytes) || f.getId() > maxId)
+                    simulatorCount++;
+            }
+
+            QString msg = QString("The server uses %1 / %2, which is lower than your current setup.\n").arg(typeName, fmtName);
+            if (analyzerCount)  msg += QString("  • %1 Analyzer frame(s) conflict with the new limits\n").arg(analyzerCount);
+            if (simulatorCount) msg += QString("  • %1 Simulator frame(s) conflict with the new limits\n").arg(simulatorCount);
+            msg += "\nServer settings will be applied regardless.";
+
+            QMessageBox dlg(this);
+            dlg.setWindowTitle("Server Settings Downgrade");
+            dlg.setText(msg);
+            QPushButton* clearAllBtn = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+            QPushButton* keepBtn     = dlg.addButton("Keep",      QMessageBox::RejectRole);
+            dlg.setDefaultButton(keepBtn);
+            dlg.exec();
+
+            if (dlg.clickedButton() == clearAllBtn) {
+                messageModel->clear();
+                QList<uint32_t> toRemove;
+                for (auto it = frameWidgets.cbegin(); it != frameWidgets.cend(); ++it) {
+                    CANFrame f = it.value()->getFrame();
+                    if (f.getData().size() > static_cast<qsizetype>(maxBytes) || f.getId() > maxId)
+                        toRemove.append(it.key());
+                }
+                for (uint32_t id : toRemove)
+                    onFrameRemove(id);
+            }
+        }
+    }
+
     m_canType  = type;
     m_idFormat = fmt;
 
