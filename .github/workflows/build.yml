@@ -12,7 +12,7 @@ jobs:
           version: '6.10.1'
           host: 'windows'
           target: 'desktop'
-          arch: 'win64_msvc2019_64'
+          arch: 'win64_msvc2022_64'
           modules: 'qtnetworkauth'
       
       - name: Configure CMake
