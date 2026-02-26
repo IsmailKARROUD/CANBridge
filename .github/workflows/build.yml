@@ -26,7 +26,7 @@ jobs:
           mkdir deploy
           cp build/Release/CANBridge.exe deploy/
           cd deploy
-          D:/a/CANBridge/Qt/6.10.1/msvc2019_64/bin/windeployqt.exe CANBridge.exe
+          D:/a/CANBridge/Qt/6.10.1/msvc2022_64/bin/windeployqt.exe CANBridge.exe
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
