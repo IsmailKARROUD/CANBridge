@@ -9,7 +9,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.5.3'
+          version: '6.10.1'
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2019_64'
@@ -25,12 +25,8 @@ jobs:
         run: |
           mkdir deploy
           cp build/Release/CANBridge.exe deploy/
-          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Core.dll deploy/
-          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Widgets.dll deploy/
-          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Gui.dll deploy/
-          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/bin/Qt6Network.dll deploy/
-          mkdir deploy/platforms
-          cp D:/a/CANBridge/Qt/6.5.3/msvc2019_64/plugins/platforms/qwindows.dll deploy/platforms/
+          cd deploy
+          D:/a/CANBridge/Qt/6.10.1/msvc2019_64/bin/windeployqt.exe CANBridge.exe
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
