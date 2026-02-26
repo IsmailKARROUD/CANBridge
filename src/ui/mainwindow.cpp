@@ -30,6 +30,9 @@
 // Forward declaration of file-scope helper (defined in the Apply helpers section)
 static int maxBytesForType(CanType t);
 
+// Bump this when the frames CSV layout changes — triggers version mismatch dialog on load
+static constexpr int FRAMES_FILE_VERSION = 1;
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -947,6 +950,7 @@ void MainWindow::onSaveFrames()
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
 
     QTextStream out(&file);
+    out << "# CANBridge Frames v" << FRAMES_FILE_VERSION << "\n";
     out << "Timestamp,Dir,ID,DLC,Data,FrameType,IDFormat\n";  // 7-column CSV header
 
     // Write each frame as a CSV row
@@ -968,7 +972,12 @@ void MainWindow::onSaveFrames()
         out << "\n";
     }
 
-    addLogEvent(QString("Saved %1 frames to %2").arg(messageModel->rowCount()).arg(filename), "Frame");
+    QString saveMsg = QString("Saved %1 frames to %2 (format v%3)")
+                          .arg(messageModel->rowCount()).arg(filename).arg(FRAMES_FILE_VERSION);
+    addLogEvent(saveMsg, "Frame");
+    QMessageBox::information(this, "Save Frames",
+                             QString("Saved %1 frame(s) successfully.\nFormat: v%2")
+                                 .arg(messageModel->rowCount()).arg(FRAMES_FILE_VERSION));
 }
 
 /**
@@ -989,7 +998,57 @@ void MainWindow::onLoadFrames()
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
     QTextStream in(&file);
-    in.readLine();  // Skip CSV header row
+
+    // Detect version line — search anywhere in the first line to handle Excel quoting
+    int fileVersion = -1;  // -1 = no version line found (legacy)
+    QString firstLine = in.readLine();
+    QRegularExpression versionRe(R"(CANBridge Frames v(\d+))");
+    auto vm = versionRe.match(firstLine);
+    if (vm.hasMatch()) {
+        fileVersion = vm.captured(1).toInt();
+        in.readLine();  // skip the CSV header row
+    }
+    // else: firstLine was the header row (old unversioned file), already consumed
+
+    // For any version mismatch, ask the user before proceeding
+    if (fileVersion != FRAMES_FILE_VERSION) {
+        QString msg, logMsg;
+
+        if (fileVersion == -1) {
+            msg    = "This file has no version information (legacy format).\n"
+                     "It will be loaded with Classic / Standard defaults for missing fields.\n\n"
+                     "Do you want to continue?";
+            logMsg = "Warning: Loaded legacy (unversioned) file — Classic/Standard defaults applied";
+        } else if (fileVersion < FRAMES_FILE_VERSION) {
+            msg    = QString("This file was saved with an older format (v%1, current is v%2).\n"
+                             "Some fields may be missing and defaults will be applied.\n\n"
+                             "Do you want to continue?").arg(fileVersion).arg(FRAMES_FILE_VERSION);
+            logMsg = QString("Warning: Loaded older format file (v%1) — some fields may use defaults")
+                         .arg(fileVersion);
+        } else {
+            msg    = QString("This file was saved with a newer format (v%1, current is v%2).\n"
+                             "Some data may not load correctly.\n\n"
+                             "Do you want to continue?").arg(fileVersion).arg(FRAMES_FILE_VERSION);
+            logMsg = QString("Warning: Loaded newer format file (v%1) — some data may be lost")
+                         .arg(fileVersion);
+        }
+
+        QMessageBox dlg(this);
+        dlg.setWindowTitle("Format Version Mismatch");
+        dlg.setText(msg);
+        dlg.setIcon(QMessageBox::Warning);
+        QPushButton* continueBtn = dlg.addButton("Continue", QMessageBox::AcceptRole);
+        dlg.addButton("Cancel", QMessageBox::RejectRole);
+        dlg.setDefaultButton(continueBtn);
+        dlg.exec();
+
+        if (dlg.clickedButton() != continueBtn) {
+            addLogEvent(logMsg + " — cancelled by user", "Frame");
+            return;
+        }
+
+        addLogEvent(logMsg, "Frame");
+    }
 
     int frameCount = 0;
     while (!in.atEnd()) {
@@ -1036,7 +1095,11 @@ void MainWindow::onLoadFrames()
         frameCount++;
     }
 
-    addLogEvent(QString("Loaded %1 frames from %2").arg(frameCount).arg(filename), "Frame");
+    QString loadMsg = QString("Loaded %1 frame(s) from %2 (format v%3)")
+                          .arg(frameCount).arg(filename).arg(fileVersion == -1 ? 0 : fileVersion);
+    addLogEvent(loadMsg, "Frame");
+    QMessageBox::information(this, "Load Frames",
+                             QString("Loaded %1 frame(s) successfully.").arg(frameCount));
 }
 
 // ============================================================================
