@@ -84,11 +84,11 @@ public:
     /// Change the periodic transmission timer tick interval (milliseconds).
     void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
 
-    /**
-     * @brief Broadcast a 3-byte settings packet [0xFF][CanType][IdFormat] to all
-     *        connected clients so they can adapt their UI to the server's bus mode.
-     */
-    void sendSettings(CanType type, IdFormat fmt);
+    /// Update the CAN bus type and broadcast the new settings to all connected clients.
+    void setCanType(CanType type);
+
+    /// Update the CAN ID format and broadcast the new settings to all connected clients.
+    void setIdFormat(IdFormat fmt);
 
 signals:
     /// Emitted when a new client connects. Provides the client's IP address.
@@ -123,6 +123,8 @@ private:
     QTcpServer* server;             ///< Underlying Qt TCP server
     QList<QTcpSocket*> clients;     ///< List of currently connected client sockets
     QTimer* periodicTimer;          ///< Timer that drives periodic frame transmission (10ms tick)
+    CanType  m_canType  = CanType::Classic;    ///< Current CAN type (sent to new clients on connect)
+    IdFormat m_idFormat = IdFormat::Standard;  ///< Current ID format (sent to new clients on connect)
 
     /**
      * @brief Describes a frame scheduled for periodic transmission.

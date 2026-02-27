@@ -87,26 +87,8 @@ void TcpServer::stopServer()
 // Frame Transmission
 // ============================================================================
 
-/**
- * Broadcast a 3-byte settings packet to every connected client.
- * Packet layout: [0xFF: 1B][CanType: 1B][IdFormat: 1B]
- * The 0xFF magic byte is distinct from the CanType values (0-2) that begin
- * a normal CAN frame header, so clients can distinguish the two packet types.
- */
-void TcpServer::sendSettings(CanType type, IdFormat fmt)
-{
-    QByteArray packet;
-    packet.append(static_cast<char>(0xFF));
-    packet.append(static_cast<char>(type));
-    packet.append(static_cast<char>(fmt));
-
-    for (auto* c : std::as_const(clients)) {
-        if (c->state() == QAbstractSocket::ConnectedState) {
-            c->write(packet);
-            c->flush();
-        }
-    }
-}
+void TcpServer::setCanType(CanType type)  { m_canType  = type; }
+void TcpServer::setIdFormat(IdFormat fmt) { m_idFormat = fmt;  }
 
 /**
  * Broadcast a single CAN frame to every connected client.
@@ -201,6 +183,14 @@ void TcpServer::onNewConnection()
     connect(client, &QTcpSocket::readyRead, this, &TcpServer::onClientReadyRead);
 
     clients.append(client);
+
+    // Send current settings to the new client only
+    QByteArray packet;
+    packet.append(static_cast<char>(0xFF));
+    packet.append(static_cast<char>(m_canType));
+    packet.append(static_cast<char>(m_idFormat));
+    client->write(packet);
+    client->flush();
 
     emit clientConnected(client->peerAddress().toString());
 }

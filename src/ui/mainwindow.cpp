@@ -77,8 +77,6 @@ MainWindow::MainWindow(QWidget *parent)
     // Log when a remote client connects to our server, and push current settings to it
     connect(server, &TcpServer::clientConnected, this, [this](const QString& address) {
         onServerClientConnected(address);
-        // Send current CAN settings to all connected clients (including the new one)
-        server->sendSettings(m_canType, m_idFormat);
     });
 
     connect(server, &TcpServer::clientDisconnected, this, [this](const QString& address) {
@@ -1260,9 +1258,7 @@ void MainWindow::applyCanType(CanType newType)
     for (auto* w : std::as_const(frameWidgets))
         w->setCanType(newType);
 
-    // Push new settings to all connected clients
-    if (server->isListening())
-        server->sendSettings(m_canType, m_idFormat);
+    server->setCanType(m_canType);
 
     addLogEvent(QString("CAN bus type changed to: %1")
                     .arg(newType == CanType::Classic ? "Classic"
@@ -1333,9 +1329,7 @@ void MainWindow::applyIdFormat(IdFormat newFmt)
     for (auto* w : std::as_const(frameWidgets))
         w->setIdFormat(newFmt);
 
-    // Push new settings to all connected clients
-    if (server->isListening())
-        server->sendSettings(m_canType, m_idFormat);
+    server->setIdFormat(m_idFormat);
 
     addLogEvent(QString("CAN ID format changed to: %1")
                     .arg(newFmt == IdFormat::Standard ? "Standard (11-bit)" : "Extended (29-bit)"), "Server");
