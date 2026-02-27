@@ -607,6 +607,7 @@ void MainWindow::updateHiddenFramesButton()
 
     if (hiddenCount > 0) {
         showHiddenBtn->setText(QString("- Show Hidden (%1)").arg(hiddenCount));
+        showHiddenBtn->setStyleSheet("QPushButton { color: orange; font-weight: bold; }");
         showHiddenBtn->setVisible(true);
     } else {
         // No hidden frames — remove the button from view entirely
