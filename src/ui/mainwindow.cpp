@@ -168,8 +168,14 @@ void MainWindow::setupConnectionTab()
 
 
     // -- Server section --
-    serverGroup  = new QGroupBox("Server");
-    QVBoxLayout* serverVBox   = new QVBoxLayout(serverGroup);
+    serverGroup = new QGroupBox("Server");
+    serverGroup->setStyleSheet(
+        "QGroupBox { border: 2px solid #27ae60; border-radius: 6px; margin-top: 10px;"
+        "            font-weight: bold; font-size: 13px; }"
+        "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; color: #27ae60; }"
+        "QGroupBox:disabled { border: 2px solid #888; }"
+        "QGroupBox::title:disabled { color: #888; }");
+    QVBoxLayout* serverVBox = new QVBoxLayout(serverGroup);
 
     // Row 1: port, status, start/stop
     QHBoxLayout* serverLayout = new QHBoxLayout();
@@ -238,6 +244,12 @@ void MainWindow::setupConnectionTab()
 
     // -- Client section --
     clientGroup = new QGroupBox("Client");
+    clientGroup->setStyleSheet(
+        "QGroupBox { border: 2px solid #2980b9; border-radius: 6px; margin-top: 10px;"
+        "            font-weight: bold; font-size: 13px; }"
+        "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; color: #2980b9; }"
+        "QGroupBox:disabled { border: 2px solid #888; }"
+        "QGroupBox::title:disabled { color: #888; }");
     QHBoxLayout* clientLayout = new QHBoxLayout();
 
     clientLayout->addWidget(new QLabel("Host:"));
