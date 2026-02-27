@@ -214,9 +214,9 @@ void TcpServer::onClientDisconnected()
 {
     QTcpSocket* client = qobject_cast<QTcpSocket*>(sender());
     if (client) {
-        emit clientDisconnected(client->peerAddress().toString());
         clients.removeOne(client);
         clientBuffers.remove(client);
+        emit clientDisconnected(client->peerAddress().toString());
         client->deleteLater();
     }
 }

@@ -50,8 +50,9 @@ public:
 
 private slots:
     // --- Connection tab: Server controls ---
-    void onStartServer();               ///< Start the TCP server on the configured port
-    void onStopServer();                ///< Stop the TCP server and disconnect all clients
+    void onStartServer();              ///< Start the TCP server on the configured port
+    void onStopServer();               ///< Stop the TCP server and disconnect all clients
+    void updateClientCountLabel();    ///< Refresh the connected-clients count label
 
     // --- Connection tab: Client controls ---
     void onConnect();                   ///< Connect to a remote server
@@ -75,7 +76,8 @@ private slots:
     void onSaveLog();                   ///< Export the full log history to a .txt file
 
     // --- Status updates from backend ---
-    void onServerClientConnected(const QString& address);   ///< Log when a client connects to server
+    void onServerClientConnected(const QString& address);       ///< Log when a client connects to server
+    void onServerClientDisconnected(const QString& address);   ///< Log when a client connects to server
     void onClientConnected();           ///< Update UI when client connects to remote server
     void onClientDisconnected();        ///< Update UI when client disconnects from remote server
 
@@ -112,6 +114,7 @@ private:
     QPushButton* startServerBtn;        ///< Button to start the server
     QPushButton* stopServerBtn;         ///< Button to stop the server
     QLabel*      serverStatusIndicator; ///< Status label (Running/Stopped/Error)
+    QLabel*      connectedClientsLabel; ///< Live count of connected clients (visible while server runs)
     QComboBox*   canTypeCombo;          ///< CAN Bus Type selector (Classic / FD / XL)
     QComboBox*   idFormatCombo;         ///< CAN ID Format selector (Standard / Extended)
 

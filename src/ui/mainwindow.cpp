@@ -81,10 +81,10 @@ MainWindow::MainWindow(QWidget *parent)
         server->sendSettings(m_canType, m_idFormat);
     });
 
-    // Log when a remote client disconnects
     connect(server, &TcpServer::clientDisconnected, this, [this](const QString& address) {
-        addLogEvent(QString("Client disconnected: %1").arg(address), "Server");
+        onServerClientDisconnected(address);
     });
+
 
     // Display server errors in the status indicator and log
     connect(server, &TcpServer::errorOccurred, this, [this](const QString& error) {
@@ -197,6 +197,11 @@ void MainWindow::setupConnectionTab()
     stopServerBtn->setVisible(false);
     serverLayout->addWidget(startServerBtn);
     serverLayout->addWidget(stopServerBtn);
+
+    connectedClientsLabel = new QLabel("Clients: 0");
+    connectedClientsLabel->setStyleSheet("QLabel { color: steelblue; font-weight: bold; }");
+    connectedClientsLabel->setVisible(false);
+    serverLayout->addWidget(connectedClientsLabel);
     serverLayout->addStretch();
 
     serverVBox->addLayout(serverLayout);
@@ -828,6 +833,8 @@ void MainWindow::onStartServer()
         canTypeCombo->setEnabled(false);
         idFormatCombo->setEnabled(false);
         clientGroup->setEnabled(false);     // Disable client while server is running
+        connectedClientsLabel->setText("Clients: 0");
+        connectedClientsLabel->setVisible(true);
 
         addLogEvent(QString("Server started on port %1").arg(serverPortSpin->value()), "Server");
     } else {
@@ -853,6 +860,7 @@ void MainWindow::onStopServer()
     canTypeCombo->setEnabled(true);
     idFormatCombo->setEnabled(true);
     clientGroup->setEnabled(true);     // Re-enable client when server stops
+    connectedClientsLabel->setVisible(false);
 
     addLogEvent("Server stopped", "Server");
 }
@@ -918,7 +926,27 @@ void MainWindow::onClientDisconnected()
  */
 void MainWindow::onServerClientConnected(const QString& address)
 {
+    // Keep the client count label in sync
+    updateClientCountLabel();
+
     addLogEvent(QString("Client connected: %1").arg(address), "Server");
+}
+
+/**
+ * Log when a remote client disconnects to our server.
+ */
+void MainWindow::onServerClientDisconnected(const QString& address)
+{
+    // Keep the client count label in sync
+    updateClientCountLabel();
+
+    addLogEvent(QString("Client disconnected: %1").arg(address), "Server");
+}
+
+void MainWindow::updateClientCountLabel()
+{
+    int n = server->connectedClientCount();
+    connectedClientsLabel->setText(QString("Clients: %1").arg(n));
 }
 
 // ============================================================================

@@ -78,6 +78,9 @@ public:
     /// Check if the server is currently listening for connections.
     bool isListening() const { return server->isListening(); }
 
+    /// Returns the number of currently connected clients.
+    int connectedClientCount() const { return clients.size(); }
+
     /// Change the periodic transmission timer tick interval (milliseconds).
     void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
 
