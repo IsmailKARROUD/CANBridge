@@ -25,7 +25,7 @@ TcpServer::TcpServer(QObject *parent)
 {
     connect(server, &QTcpServer::newConnection, this, &TcpServer::onNewConnection);
     connect(periodicTimer, &QTimer::timeout, this, &TcpServer::onSendPeriodicFrames);
-    periodicTimer->setInterval(10);  // 10ms resolution for periodic checks
+    periodicTimer->setInterval(MIN_INTERVAL);  // MIN_INTERVAL ms resolution for periodic checks
 }
 
 /**
@@ -166,6 +166,14 @@ void TcpServer::clearPeriodicFrames()
     periodicTimer->stop();
 }
 
+void TcpServer::setTimerInterval(int ms) {
+    if (ms < MIN_INTERVAL) {
+        qWarning() << "Timer interval too low, clamping to "<< MIN_INTERVAL<<"ms (was" << ms << "ms)";
+        return;
+    }
+    periodicTimer->setInterval(ms);
+}
+
 // ============================================================================
 // Connection Event Handlers
 // ============================================================================
@@ -222,9 +230,8 @@ void TcpServer::onClientDisconnected()
  */
 void TcpServer::onSendPeriodicFrames()
 {
-    qint64 now = QDateTime::currentMSecsSinceEpoch();
-
     for (auto& pf : periodicFrames) {
+        qint64 now = QDateTime::currentMSecsSinceEpoch();
         if (now - pf.lastSent >= pf.interval) {
             pf.frame.setTimestamp(now);
             sendFrame(pf.frame);

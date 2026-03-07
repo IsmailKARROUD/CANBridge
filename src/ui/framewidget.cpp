@@ -98,6 +98,18 @@ FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     connect(canIdEdit,        &QLineEdit::editingFinished, this, &FrameWidget::onCanIdChanged);
     connect(dataEdit,         &QLineEdit::textChanged, this, &FrameWidget::onDataChanged);
     connect(periodicCheckBox, &QCheckBox::toggled, intervalSpin, &QSpinBox::setEnabled);
+    connect(intervalSpin, &QSpinBox::valueChanged, this, [this](int ms) {
+        if (periodicCheckBox->isChecked()) {
+            int minRes = intervalSpin->minimum();
+            if (minRes > 0 && ms == minRes) {
+                statusLabel->setText(QString("⚠ Minimum interval is %1 ms (timer resolution)").arg(ms));
+                statusLabel->setStyleSheet("QLabel { color: orange; }");
+            } else {
+                statusLabel->setText(QString("⟳ Periodic active (%1 ms)").arg(ms));
+                statusLabel->setStyleSheet("QLabel { color: blue; }");
+            }
+        }
+    });
 }
 
 // ============================================================================
@@ -212,7 +224,7 @@ void FrameWidget::setPeriodicEnabled(bool enabled)
 
 void FrameWidget::setMinInterval(int ms)
 {
-    intervalSpin->setMinimum(ms);
+   intervalSpin->setMinimum(ms);
     if (intervalSpin->value() < ms)
         intervalSpin->setValue(ms);
 }

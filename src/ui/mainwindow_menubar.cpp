@@ -80,7 +80,7 @@ void MainWindow::setupMenuBar()
         QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Unknown);
     });
     connect(lightThemeAction, &QAction::triggered, this, [this]() {
-    QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
+        QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
     });
     connect(darkModeAction,   &QAction::triggered, this, [this]() {
         QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Dark);
@@ -180,10 +180,12 @@ void MainWindow::setupMenuBar()
                 widget->setMinInterval(ms);
         });
     };
-    addTimerOption("1 ms  (High Accuracy)", 1,  false);
-    addTimerOption("5 ms",                  5,  false);
-    addTimerOption("10 ms (Default)",       10, true);
-    addTimerOption("50 ms (Low CPU)",       50, false);
+    addTimerOption("10 ms  (High Accuracy)", 10,  true);
+    addTimerOption("50 ms",                  50,  false);
+    addTimerOption("100 ms",                 100, false);
+    addTimerOption("200 ms",                 200, false);
+    addTimerOption("500 ms",                 500, false);
+    addTimerOption("1 s",                    1000, false);
 
     frameMenu->addSeparator();
 

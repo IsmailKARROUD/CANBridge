@@ -28,7 +28,7 @@ TcpClient::TcpClient(QObject *parent)
     connect(socket, &QTcpSocket::readyRead, this, &TcpClient::onReadyRead);
     connect(socket, &QTcpSocket::errorOccurred, this, &TcpClient::onError);
     connect(periodicTimer, &QTimer::timeout, this, &TcpClient::onSendPeriodicFrames);
-    periodicTimer->setInterval(10);  // 10ms resolution for periodic checks
+    periodicTimer->setInterval(MIN_INTERVAL);  // MIN_INTERVAL ms resolution for periodic checks
 }
 
 /**
@@ -262,16 +262,26 @@ void TcpClient::clearPeriodicFrames()
     periodicTimer->stop();
 }
 
+void TcpClient::setTimerInterval(int ms) {
+    if (ms < MIN_INTERVAL) {
+        qWarning() << "Timer interval too low, clamping to "<< MIN_INTERVAL<<"ms (was" << ms << "ms)";
+        return;
+    }
+    periodicTimer->setInterval(ms);
+}
+
 /**
- * Timer callback (every 10ms): iterate through all periodic frames and
+ * Timer callback : iterate through all periodic frames and
  * transmit any whose interval has elapsed since their last send time.
  * Each frame's timestamp is updated to the current time before sending.
  */
 void TcpClient::onSendPeriodicFrames()
 {
-    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (!isConnected()) return;
 
     for (auto& pf : periodicFrames) {
+        qint64 now = QDateTime::currentMSecsSinceEpoch();
+
         if (now - pf.lastSent >= pf.interval) {
             pf.frame.setTimestamp(now);
             sendFrame(pf.frame);

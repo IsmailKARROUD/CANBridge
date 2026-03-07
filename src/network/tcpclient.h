@@ -77,7 +77,7 @@ public:
     void clearPeriodicFrames();
 
     /// Change the periodic transmission timer tick interval (milliseconds).
-    void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
+    void setTimerInterval(int ms);
 
 signals:
     /// Emitted when the TCP connection is successfully established.
@@ -128,6 +128,8 @@ private:
      * @return true if a frame was parsed (and frameReceived() was emitted), false otherwise.
      */
     bool parseFrame();
+
+    const int MIN_INTERVAL = 10;
 };
 
 #endif // TCPCLIENT_H

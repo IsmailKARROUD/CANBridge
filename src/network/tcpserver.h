@@ -82,7 +82,7 @@ public:
     int connectedClientCount() const { return clients.size(); }
 
     /// Change the periodic transmission timer tick interval (milliseconds).
-    void setTimerInterval(int ms) { periodicTimer->setInterval(ms); }
+    void setTimerInterval(int ms);
 
     /// Update the CAN bus type and broadcast the new settings to all connected clients.
     void setCanType(CanType type);
@@ -136,6 +136,8 @@ private:
     };
     QList<PeriodicFrame> periodicFrames;            ///< All scheduled periodic frames
     QHash<QTcpSocket*, QByteArray> clientBuffers;   ///< Per-client receive buffer for partial frames
+
+    const int MIN_INTERVAL = 10;
 };
 
 #endif // TCPSERVER_H
