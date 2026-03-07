@@ -440,6 +440,14 @@ void FrameWidget::onDataChanged(const QString& text)
     // Auto-update DLC based on byte count
     QString cleaned = formatted;
     cleaned.remove(' ');
+
+    if (cleaned.length() % 2 != 0) {
+        statusLabel->setText("⚠ Incomplete byte: enter 2 hex digits per byte");
+        statusLabel->setStyleSheet("QLabel { color: orange; }");
+    } else if (statusLabel->text().startsWith("⚠ Incomplete")) {
+        statusLabel->setText("");
+    }
+
     int byteCount = (cleaned.length() + 1) / 2;
 
     if (m_canType == CanType::FD) {
