@@ -88,3 +88,28 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/ui"
     "${CMAKE_CURRENT_BINARY_DIR}"
 )
+
+# Shared metadata used by both macOS bundle and Windows version resource
+set(PRODUCT_NAME     "CANBridge")
+set(COPYRIGHT        "Copyright © 2026 Ismail KARROUD")
+
+# macOS bundle: point Qt to our custom Info.plist template so that
+# CFBundleIdentifier, copyright, and version are embedded at build time
+set_target_properties(CANBridge PROPERTIES
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
+)
+
+if(WIN32)
+    set(COMPANY_NAME     "Ismail KARROUD")
+    set(FILE_DESCRIPTION "CAN Bus Analyzer and Simulator")
+
+    # Generate the Windows version-resource file from the template
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/version.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/version.rc"
+        @ONLY
+    )
+
+    # Append the resource to the existing target (do NOT call add_executable again)
+    target_sources(CANBridge PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
+endif()
