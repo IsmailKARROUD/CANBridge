@@ -38,6 +38,23 @@ void MainWindow::setupMenuBar()
     setMenuBar(menuBar);
 
     // -------------------------------------------------------------------------
+    // CANBridge application menu
+    // -------------------------------------------------------------------------
+    QMenu* appMenu = menuBar->addMenu("CANBridge");
+
+    QAction* aboutAction = appMenu->addAction("About CANBridge");
+    connect(aboutAction, &QAction::triggered, this, [this]() {
+        AboutDialog dialog(this);
+        dialog.exec();
+    });
+
+    appMenu->addSeparator();
+
+    QAction* quitAction = appMenu->addAction("Quit");
+    quitAction->setShortcut(QKeySequence::Quit);
+    connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
+
+    // -------------------------------------------------------------------------
     // File menu — project save / load
     // -------------------------------------------------------------------------
     QMenu* fileMenu = menuBar->addMenu("File");
@@ -59,23 +76,6 @@ void MainWindow::setupMenuBar()
     QAction* saveProjectAsAction = fileMenu->addAction("Save Project As...");
     saveProjectAsAction->setShortcut(QKeySequence::SaveAs);
     connect(saveProjectAsAction, &QAction::triggered, this, &MainWindow::onSaveProjectAs);
-
-    // -------------------------------------------------------------------------
-    // CANBridge application menu
-    // -------------------------------------------------------------------------
-    QMenu* appMenu = menuBar->addMenu("CANBridge");
-
-    QAction* aboutAction = appMenu->addAction("About CANBridge");
-    connect(aboutAction, &QAction::triggered, this, [this]() {
-        AboutDialog dialog(this);
-        dialog.exec();
-    });
-
-    appMenu->addSeparator();
-
-    QAction* quitAction = appMenu->addAction("Quit");
-    quitAction->setShortcut(QKeySequence::Quit);
-    connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 
     // -------------------------------------------------------------------------
     // View menu — theme and timestamp format

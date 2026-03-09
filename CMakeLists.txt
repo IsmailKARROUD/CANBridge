@@ -70,7 +70,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set project version (used by version.h.in template)
 project(CANBridge
-    VERSION 0.2.0
+    VERSION 0.3.0
     LANGUAGES CXX
 )
 
@@ -93,15 +93,29 @@ include_directories(
 set(PRODUCT_NAME     "CANBridge")
 set(COPYRIGHT        "Copyright © 2026 Ismail KARROUD")
 
-# macOS bundle: point Qt to our custom Info.plist template so that
-# CFBundleIdentifier, copyright, and version are embedded at build time
+# Qt resource system — embeds logo.png for in-app use (e.g. About dialog)
+qt_add_resources(CANBridge "appResources"
+    PREFIX "/"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+    FILES
+        resources/logo.png
+)
+
+# macOS bundle: app icon (.icns) + custom Info.plist
+set(MACOSX_ICON "${CMAKE_CURRENT_SOURCE_DIR}/resources/logo.icns")
+set_source_files_properties(${MACOSX_ICON} PROPERTIES
+    MACOSX_PACKAGE_LOCATION "Resources"
+)
+target_sources(CANBridge PRIVATE ${MACOSX_ICON})
 set_target_properties(CANBridge PROPERTIES
-    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
+    MACOSX_BUNDLE_ICON_FILE    logo.icns
+    MACOSX_BUNDLE_INFO_PLIST   "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in"
 )
 
 if(WIN32)
     set(COMPANY_NAME     "Ismail KARROUD")
     set(FILE_DESCRIPTION "CAN Bus Analyzer and Simulator")
+    set(APP_ICON_PATH    "${CMAKE_CURRENT_SOURCE_DIR}/resources/logo.ico")
 
     # Generate the Windows version-resource file from the template
     configure_file(
