@@ -340,11 +340,17 @@ void MainWindow::setupLogTab()
     logDisplay->setPlaceholderText("Events will appear here...");
     mainLayout->addWidget(logDisplay);
 
-    // -- Bottom bar: Save Log button --
+    // -- Bottom bar: Save Log / Clear Log buttons --
     QHBoxLayout* logControlLayout = new QHBoxLayout();
     saveLogBtn = new QPushButton("Save Log");
     saveLogBtn->setMaximumWidth(120);
     logControlLayout->addWidget(saveLogBtn);
+
+    clearLogBtn = new QPushButton("Clear Log");
+    clearLogBtn->setMaximumWidth(120);
+    clearLogBtn->setStyleSheet("QPushButton { color: red; }");
+    logControlLayout->addWidget(clearLogBtn);
+
     logControlLayout->addStretch();
     mainLayout->addLayout(logControlLayout);
 
@@ -352,7 +358,30 @@ void MainWindow::setupLogTab()
 
     connect(logFilterCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &MainWindow::onLogFilterChanged);
-    connect(saveLogBtn, &QPushButton::clicked, this, &MainWindow::onSaveLog);
+    connect(saveLogBtn,  &QPushButton::clicked, this, &MainWindow::onSaveLog);
+    connect(clearLogBtn, &QPushButton::clicked, this, [this]() {
+        QDialog dlg(this);
+        dlg.setWindowTitle("Clear Log");
+        QVBoxLayout* layout = new QVBoxLayout(&dlg);
+        layout->addWidget(new QLabel("Clear all log entries?"));
+        QHBoxLayout* btnLayout = new QHBoxLayout();
+        QPushButton* noBtn  = new QPushButton("No");
+        QPushButton* yesBtn = new QPushButton("Yes");
+        yesBtn->setStyleSheet("QPushButton { color: red; font-weight: bold; }");
+        btnLayout->addStretch();
+        btnLayout->addWidget(noBtn);
+        btnLayout->addStretch();
+        btnLayout->addWidget(yesBtn);
+        btnLayout->addStretch();
+        layout->addLayout(btnLayout);
+        noBtn->setDefault(true);
+        connect(noBtn,  &QPushButton::clicked, &dlg, &QDialog::reject);
+        connect(yesBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
+        if (dlg.exec() == QDialog::Accepted) {
+            logHistory.clear();
+            updateLogDisplay();
+        }
+    });
 }
 
 // ============================================================================
@@ -700,24 +729,46 @@ void MainWindow::onStopFramePeriodic(const int& Id) {
 /**
  * Remove a frame widget from the simulator.
  */
-void MainWindow::onFrameRemove(uint32_t canId)
+void MainWindow::removeFrameSilent(uint32_t canId)
 {
     auto it = frameWidgets.find(canId);
-    if (it != frameWidgets.end()) {
-        // Stop periodic if active
-        if ((*it)->isPeriodicEnabled()) {
-            server->removePeriodicFrame(canId);
-            client->removePeriodicFrame(canId);
-        }
+    if (it == frameWidgets.end()) return;
 
-        (*it)->deleteLater();
-        frameWidgets.erase(it);
-
-        // A hidden frame may have been removed — keep the button count accurate
-        updateHiddenFramesButton();
-
-        addLogEvent(QString("Removed frame ID: 0x%1").arg(canId, 0, 16), "Frame");
+    if ((*it)->isPeriodicEnabled()) {
+        server->removePeriodicFrame(canId);
+        client->removePeriodicFrame(canId);
     }
+
+    (*it)->deleteLater();
+    frameWidgets.erase(it);
+    updateHiddenFramesButton();
+    addLogEvent(QString("Removed frame ID: 0x%1").arg(canId, 0, 16), "Frame");
+}
+
+void MainWindow::onFrameRemove(uint32_t canId)
+{
+    if (frameWidgets.find(canId) == frameWidgets.end()) return;
+
+    QDialog dlg(this);
+    dlg.setWindowTitle("Remove Frame");
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+    layout->addWidget(new QLabel(QString("Remove frame 0x%1?").arg(canId, 0, 16)));
+    QHBoxLayout* btnLayout = new QHBoxLayout();
+    QPushButton* noBtn  = new QPushButton("No");
+    QPushButton* yesBtn = new QPushButton("Yes");
+    yesBtn->setStyleSheet("QPushButton { color: red; font-weight: bold; }");
+    btnLayout->addStretch();
+    btnLayout->addWidget(noBtn);
+    btnLayout->addStretch();
+    btnLayout->addWidget(yesBtn);
+    btnLayout->addStretch();
+    layout->addLayout(btnLayout);
+    noBtn->setDefault(true);
+    connect(noBtn,  &QPushButton::clicked, &dlg, &QDialog::reject);
+    connect(yesBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
+    if (dlg.exec() != QDialog::Accepted) return;
+
+    removeFrameSilent(canId);
 }
 
 // ============================================================================
@@ -1264,7 +1315,7 @@ void MainWindow::applyCanType(CanType newType)
                         toRemove.append(it.key());
                 }
                 for (uint32_t id : toRemove)
-                    onFrameRemove(id);
+                    removeFrameSilent(id);
             }
             // "Keep": conflicting frames are retained; send-time validation will reject them
         }
@@ -1336,7 +1387,7 @@ void MainWindow::applyIdFormat(IdFormat newFmt)
                         toRemove.append(it.key());
                 }
                 for (uint32_t id : toRemove)
-                    onFrameRemove(id);
+                    removeFrameSilent(id);
             }
             // "Keep": conflicting frames are retained; send-time validation will reject them
         }
@@ -1408,7 +1459,7 @@ void MainWindow::applySettingsFromServer(CanType type, IdFormat fmt)
                         toRemove.append(it.key());
                 }
                 for (uint32_t id : toRemove)
-                    onFrameRemove(id);
+                    removeFrameSilent(id);
             }
         }
     }
@@ -1657,7 +1708,7 @@ void MainWindow::loadProject(const QString& path)
     // --- Clear existing simulator frames ---
     const QList<uint32_t> existingIds = frameWidgets.keys();
     for (uint32_t id : existingIds)
-        onFrameRemove(id);
+        removeFrameSilent(id);
 
     // --- Restore simulator frames ---
     QJsonArray frames = root["simulatorFrames"].toArray();
@@ -1694,7 +1745,7 @@ void MainWindow::onNewProject()
     // Remove all simulator frames
     const QList<uint32_t> ids = frameWidgets.keys();
     for (uint32_t id : ids)
-        onFrameRemove(id);
+        removeFrameSilent(id);
 
     // Reset connection settings to defaults
     m_canType  = CanType::Classic;

@@ -138,6 +138,7 @@ private:
     QComboBox* logFilterCombo;          ///< Dropdown for log category filtering
     QTextEdit* logDisplay;              ///< Read-only text area for event log
     QPushButton* saveLogBtn;            ///< Button to export the full log history to a file
+    QPushButton* clearLogBtn;           ///< Button to clear all log entries
 
     // -- Simulator tab --
     QVBoxLayout* framesLayout;              ///< Container for FrameWidget instances
@@ -234,6 +235,7 @@ private:
 private:
     void saveProject(const QString& path);
     void loadProject(const QString& path);
+    void removeFrameSilent(uint32_t canId);  ///< Remove a frame without confirmation dialog
 
     QString formatHexWithSpaces(const QString& input);
     QString m_projectPath;              ///< Path of the currently open project file (empty = unsaved)
