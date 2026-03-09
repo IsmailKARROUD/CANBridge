@@ -66,6 +66,12 @@ private slots:
     void onStopFramePeriodic(const int& frame);
     void onFrameRemove(uint32_t canId);
 
+    // --- Project file ---
+    void onNewProject();
+    void onOpenProject();
+    void onSaveProject();
+    void onSaveProjectAs();
+
     // --- Analyzer tab ---
     void onClearMessages();             ///< Clear all captured frames from the model
     void onSaveFrames();                ///< Export captured frames to a CSV file
@@ -226,7 +232,11 @@ private:
     // Other function
     // ========================================================================
 private:
+    void saveProject(const QString& path);
+    void loadProject(const QString& path);
+
     QString formatHexWithSpaces(const QString& input);
+    QString m_projectPath;              ///< Path of the currently open project file (empty = unsaved)
     int MAXLOGHISTORY = 50;             ///< Maximum number of log entries to keep
     bool m_autoScroll = false;          ///< Whether the Analyzer table auto-scrolls on new frames
     int m_timerResolutionMs = 10;       ///< Current periodic timer tick (enforced as min frame interval)

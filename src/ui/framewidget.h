@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
+#include <QJsonObject>
 #include <functional>
 #include "../core/CANFrame.h"
 
@@ -70,6 +71,12 @@ public:
 
     /// Returns the actual maximum data byte count for the current DLC selection.
     int getEffectiveDataBytes() const;
+
+    /// Serialize this widget's state to a JSON object for project save.
+    QJsonObject toJson() const;
+
+    /// Restore this widget's state from a JSON object on project load.
+    void fromJson(const QJsonObject& obj);
 
     /**
      * @brief Provide a live connection-state checker to this widget.

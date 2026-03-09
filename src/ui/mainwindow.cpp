@@ -23,6 +23,11 @@
 #include <QDialog>
 #include <QListWidget>
 #include <QDialogButtonBox>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFile>
+#include <QFileInfo>
 
 #include "mainwindow.h"
 #include "aboutdialog.h"
@@ -600,7 +605,7 @@ void MainWindow::updateHiddenFramesButton()
 {
     int hiddenCount = 0;
     for (auto* widget : std::as_const(frameWidgets)) {
-        if (!widget->isVisible()) {
+        if (widget->isHidden()) {
             hiddenCount++;
         }
     }
@@ -1556,6 +1561,176 @@ void MainWindow::updateLogDisplay()
     }
 
     logDisplay->setText(displayLines.join("\n"));
+}
+
+// ============================================================================
+// Project Save / Load
+// ============================================================================
+
+static constexpr int PROJECT_FILE_VERSION = 1;
+
+void MainWindow::saveProject(const QString& path)
+{
+    // --- Connection settings ---
+    QJsonObject conn;
+    conn["canType"]    = static_cast<int>(m_canType);
+    conn["idFormat"]   = static_cast<int>(m_idFormat);
+    conn["serverPort"] = serverPortSpin->value();
+    conn["clientHost"] = hostEdit->text();
+    conn["clientPort"] = clientPortSpin->value();
+
+    // --- Simulator frames ---
+    QJsonArray frames;
+    for (auto it = frameWidgets.cbegin(); it != frameWidgets.cend(); ++it)
+        frames.append(it.value()->toJson());
+
+    QJsonObject root;
+    root["version"]    = PROJECT_FILE_VERSION;
+    root["connection"] = conn;
+    root["simulatorFrames"] = frames;
+
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Save Project",
+                             "Could not open file for writing:\n" + path);
+        return;
+    }
+    file.write(QJsonDocument(root).toJson());
+
+    m_projectPath = path;
+    setWindowTitle(QString("CANBridge — %1").arg(QFileInfo(path).fileName()));
+    addLogEvent(QString("Project saved: %1").arg(path), "Server");
+}
+
+void MainWindow::loadProject(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Open Project",
+                             "Could not open file:\n" + path);
+        return;
+    }
+
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
+    if (doc.isNull()) {
+        QMessageBox::warning(this, "Open Project",
+                             "Invalid project file:\n" + err.errorString());
+        return;
+    }
+
+    QJsonObject root = doc.object();
+
+    // --- Warn if existing simulator frames will be cleared ---
+    if (!frameWidgets.isEmpty()) {
+        QMessageBox dlg(this);
+        dlg.setWindowTitle("Load Project");
+        dlg.setIcon(QMessageBox::Warning);
+        dlg.setText(QString("Loading this project will replace the %1 existing simulator frame(s).\n\n"
+                            "Unsaved frames will be lost. Continue?")
+                        .arg(frameWidgets.size()));
+        QPushButton* continueBtn = dlg.addButton("Continue", QMessageBox::AcceptRole);
+        dlg.addButton("Cancel", QMessageBox::RejectRole);
+        dlg.setDefaultButton(continueBtn);
+        dlg.exec();
+        if (dlg.clickedButton() != continueBtn)
+            return;
+    }
+
+    // --- Restore connection settings (no downgrade dialog — user's own file) ---
+    QJsonObject conn = root["connection"].toObject();
+    CanType  newType = static_cast<CanType>(conn["canType"].toInt(0));
+    IdFormat newFmt  = static_cast<IdFormat>(conn["idFormat"].toInt(0));
+
+    m_canType  = newType;
+    m_idFormat = newFmt;
+    canTypeCombo->setCurrentIndex(static_cast<int>(newType));
+    idFormatCombo->setCurrentIndex(static_cast<int>(newFmt));
+
+    if (conn.contains("serverPort"))
+        serverPortSpin->setValue(conn["serverPort"].toInt());
+    if (conn.contains("clientHost"))
+        hostEdit->setText(conn["clientHost"].toString());
+    if (conn.contains("clientPort"))
+        clientPortSpin->setValue(conn["clientPort"].toInt());
+
+    // --- Clear existing simulator frames ---
+    const QList<uint32_t> existingIds = frameWidgets.keys();
+    for (uint32_t id : existingIds)
+        onFrameRemove(id);
+
+    // --- Restore simulator frames ---
+    QJsonArray frames = root["simulatorFrames"].toArray();
+    for (const QJsonValue& val : std::as_const(frames)) {
+        QJsonObject obj = val.toObject();
+        uint32_t id = static_cast<uint32_t>(obj["id"].toInteger(0x100));
+        addFrameWidget(id);
+        if (frameWidgets.contains(id))
+            frameWidgets[id]->fromJson(obj);
+    }
+
+    updateHiddenFramesButton();
+
+    m_projectPath = path;
+    setWindowTitle(QString("CANBridge — %1").arg(QFileInfo(path).fileName()));
+    addLogEvent(QString("Project loaded: %1 (%2 frame(s))").arg(path).arg(frames.size()), "Server");
+}
+
+void MainWindow::onNewProject()
+{
+    if (!frameWidgets.isEmpty()) {
+        QMessageBox dlg(this);
+        dlg.setWindowTitle("New Project");
+        dlg.setIcon(QMessageBox::Question);
+        dlg.setText("Clear all simulator frames and reset the connection settings?");
+        QPushButton* clearBtn = dlg.addButton("Clear All", QMessageBox::DestructiveRole);
+        dlg.addButton("Cancel", QMessageBox::RejectRole);
+        dlg.setDefaultButton(clearBtn);
+        dlg.exec();
+        if (dlg.clickedButton() != clearBtn)
+            return;
+    }
+
+    // Remove all simulator frames
+    const QList<uint32_t> ids = frameWidgets.keys();
+    for (uint32_t id : ids)
+        onFrameRemove(id);
+
+    // Reset connection settings to defaults
+    m_canType  = CanType::Classic;
+    m_idFormat = IdFormat::Standard;
+    canTypeCombo->setCurrentIndex(0);
+    idFormatCombo->setCurrentIndex(0);
+
+    m_projectPath.clear();
+    setWindowTitle("CANBridge - CAN Bus Analyzer/Simulator");
+    addLogEvent("New project created", "Server");
+}
+
+void MainWindow::onOpenProject()
+{
+    QString path = QFileDialog::getOpenFileName(
+        this, "Open Project", "", "CANBridge Project (*.cbp);;All Files (*)");
+    if (path.isEmpty()) return;
+    loadProject(path);
+}
+
+void MainWindow::onSaveProject()
+{
+    if (m_projectPath.isEmpty())
+        onSaveProjectAs();
+    else
+        saveProject(m_projectPath);
+}
+
+void MainWindow::onSaveProjectAs()
+{
+    QString path = QFileDialog::getSaveFileName(
+        this, "Save Project As", "", "CANBridge Project (*.cbp);;All Files (*)");
+    if (path.isEmpty()) return;
+    if (!path.endsWith(".cbp", Qt::CaseInsensitive))
+        path += ".cbp";
+    saveProject(path);
 }
 
 // Auto-format hex input with spaces every 2 characters

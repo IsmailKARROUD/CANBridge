@@ -38,6 +38,29 @@ void MainWindow::setupMenuBar()
     setMenuBar(menuBar);
 
     // -------------------------------------------------------------------------
+    // File menu — project save / load
+    // -------------------------------------------------------------------------
+    QMenu* fileMenu = menuBar->addMenu("File");
+
+    QAction* newProjectAction = fileMenu->addAction("New Project");
+    newProjectAction->setShortcut(QKeySequence::New);
+    connect(newProjectAction, &QAction::triggered, this, &MainWindow::onNewProject);
+
+    QAction* openProjectAction = fileMenu->addAction("Open Project...");
+    openProjectAction->setShortcut(QKeySequence::Open);
+    connect(openProjectAction, &QAction::triggered, this, &MainWindow::onOpenProject);
+
+    fileMenu->addSeparator();
+
+    QAction* saveProjectAction = fileMenu->addAction("Save Project");
+    saveProjectAction->setShortcut(QKeySequence::Save);
+    connect(saveProjectAction, &QAction::triggered, this, &MainWindow::onSaveProject);
+
+    QAction* saveProjectAsAction = fileMenu->addAction("Save Project As...");
+    saveProjectAsAction->setShortcut(QKeySequence::SaveAs);
+    connect(saveProjectAsAction, &QAction::triggered, this, &MainWindow::onSaveProjectAs);
+
+    // -------------------------------------------------------------------------
     // CANBridge application menu
     // -------------------------------------------------------------------------
     QMenu* appMenu = menuBar->addMenu("CANBridge");

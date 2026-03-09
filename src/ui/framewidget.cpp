@@ -245,6 +245,48 @@ void FrameWidget::setIntervalValue(int ms)
     intervalSpin->setValue(ms);
 }
 
+QJsonObject FrameWidget::toJson() const
+{
+    CANFrame frame = getFrame();
+
+    const QByteArray& d = frame.getData();
+    QStringList bytes;
+    for (int i = 0; i < d.size(); ++i)
+        bytes.append(QString("%1").arg(static_cast<quint8>(d[i]), 2, 16, QChar('0')).toUpper());
+
+    QJsonObject obj;
+    obj["id"]              = static_cast<qint64>(frame.getId());
+    obj["data"]            = bytes.join(" ");
+    obj["dlc"]             = getEffectiveDlc();
+    obj["periodicEnabled"] = isPeriodicEnabled();
+    obj["intervalMs"]      = getPeriodicInterval();
+    obj["visible"]         = !isHidden();  // isVisible() is false when parent tab is inactive
+    return obj;
+}
+
+void FrameWidget::fromJson(const QJsonObject& obj)
+{
+    // ID was already set by addFrameWidget — keep it
+    quint32 id = currentCanId;
+
+    QString dataStr = obj["data"].toString();
+    QStringList dataList = dataStr.split(' ', Qt::SkipEmptyParts);
+    QByteArray data;
+    bool ok;
+    for (const QString& hex : dataList) {
+        quint32 byte = hex.toUInt(&ok, 16);
+        if (ok && byte <= 0xFF)
+            data.append(static_cast<char>(byte));
+    }
+
+    quint16 dlc = static_cast<quint16>(obj["dlc"].toInt());
+    setFrame(CANFrame(id, dlc, data, m_canType, m_idFormat));
+
+    setIntervalValue(obj["intervalMs"].toInt(100));
+    setPeriodicEnabled(obj["periodicEnabled"].toBool(false));
+    setVisible(obj["visible"].toBool(true));
+}
+
 void FrameWidget::setConnectionChecker(std::function<bool()> checker)
 {
     m_connectionChecker = std::move(checker);
