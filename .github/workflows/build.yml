@@ -38,6 +38,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             ninja-build \
+            imagemagick \
             libgl1-mesa-dev \
             libxkbcommon-x11-0 \
             libxcb-cursor0 \
@@ -97,7 +98,7 @@ jobs:
           Categories=Utility;
           EOF
 
-          convert resources/logo.png -resize 256x256 /tmp/CANBridge_icon.png
+          convert resources/logo.png -resize 256x256^ -gravity center -extent 256x256 /tmp/CANBridge_icon.png
 
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
