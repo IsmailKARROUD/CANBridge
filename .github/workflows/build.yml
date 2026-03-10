@@ -20,6 +20,7 @@ jobs:
             qt_host: mac
             qt_arch: clang_64
             artifact: CANBridge-macOS
+            cmake_extra: -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
           - os: ubuntu-latest
             qt_host: linux
@@ -62,7 +63,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
-        run: cmake -B build -G Ninja -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -G Ninja -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_extra }}
 
       - name: Build
         run: cmake --build build
