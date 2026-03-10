@@ -1,80 +1,42 @@
 name: Build CANBridge
-on: [push]
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            qt_host: windows
+            qt_arch: win64_msvc2022_64
+            artifact: CANBridge-Windows
+
+          - os: macos-latest
+            qt_host: mac
+            qt_arch: macos
+            artifact: CANBridge-macOS
+
+          - os: ubuntu-latest
+            qt_host: linux
+            qt_arch: linux_gcc_64
+            artifact: CANBridge-Linux
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.10.1'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_msvc2022_64'
-          modules: 'qtnetworkauth'
-
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_PREFIX_PATH="${env:Qt6_Dir}" -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Gather dependencies
-        run: |
-          mkdir deploy
-          cp build/Release/CANBridge.exe deploy/
-          cd deploy
-          D:/a/CANBridge/Qt/6.10.1/msvc2022_64/bin/windeployqt.exe CANBridge.exe
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CANBridge-Windows
-          path: deploy/
-
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.10.1'
-          host: 'mac'
-          target: 'desktop'
-          arch: 'macos'
-          modules: 'qtnetworkauth'
-
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build
-        run: cmake --build build --config Release
-
-      - name: Deploy macOS app
-        run: |
-          mkdir -p deploy
-          cp -R build/CANBridge.app deploy/
-          $Qt6_DIR/bin/macdeployqt deploy/CANBridge.app -dmg
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CANBridge-macOS
-          path: deploy/CANBridge.dmg
-
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
+            ninja-build \
             libgl1-mesa-dev \
             libxkbcommon-x11-0 \
             libxcb-cursor0 \
@@ -89,18 +51,39 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: '6.10.1'
-          host: 'linux'
-          target: 'desktop'
-          arch: 'linux_gcc_64'
-          modules: 'qtnetworkauth'
+          host: ${{ matrix.qt_host }}
+          target: desktop
+          arch: ${{ matrix.qt_arch }}
+          modules: qtnetworkauth
+          cache: true
+
+      - name: Setup MSVC environment
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -G Ninja -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
-      - name: Package binary
+      - name: Deploy Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir -p deploy
+          cp build/CANBridge.exe deploy/
+          cd deploy
+          ${{ env.Qt6_DIR }}/bin/windeployqt.exe CANBridge.exe
+
+      - name: Deploy macOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p deploy
+          cp -R build/CANBridge.app deploy/
+          ${{ env.Qt6_DIR }}/bin/macdeployqt deploy/CANBridge.app -dmg
+
+      - name: Deploy Linux
+        if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir -p deploy
           cp build/CANBridge deploy/
@@ -108,5 +91,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CANBridge-Linux
-          path: deploy/CANBridge
+          name: ${{ matrix.artifact }}
+          path: deploy/
