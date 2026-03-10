@@ -5,7 +5,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -14,22 +14,99 @@ jobs:
           target: 'desktop'
           arch: 'win64_msvc2022_64'
           modules: 'qtnetworkauth'
-      
+
       - name: Configure CMake
         run: cmake -B build -DCMAKE_PREFIX_PATH="${env:Qt6_Dir}" -DCMAKE_BUILD_TYPE=Release
-      
+
       - name: Build
         run: cmake --build build --config Release
-      
+
       - name: Gather dependencies
         run: |
           mkdir deploy
           cp build/Release/CANBridge.exe deploy/
           cd deploy
           D:/a/CANBridge/Qt/6.10.1/msvc2022_64/bin/windeployqt.exe CANBridge.exe
-      
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: CANBridge-Windows
           path: deploy/
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.10.1'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'macos'
+          modules: 'qtnetworkauth'
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Deploy macOS app
+        run: |
+          mkdir -p deploy
+          cp -R build/CANBridge.app deploy/
+          $Qt6_DIR/bin/macdeployqt deploy/CANBridge.app -dmg
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CANBridge-macOS
+          path: deploy/CANBridge.dmg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1-mesa-dev \
+            libxkbcommon-x11-0 \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-xinerama0 \
+            libxcb-xfixes0
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.10.1'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+          modules: 'qtnetworkauth'
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_PREFIX_PATH="$Qt6_DIR" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package binary
+        run: |
+          mkdir -p deploy
+          cp build/CANBridge deploy/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CANBridge-Linux
+          path: deploy/CANBridge
