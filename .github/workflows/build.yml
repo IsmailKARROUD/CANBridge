@@ -97,6 +97,8 @@ jobs:
           Categories=Utility;
           EOF
 
+          convert resources/logo.png -resize 256x256 /tmp/CANBridge_icon.png
+
           wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy*.AppImage
@@ -105,7 +107,7 @@ jobs:
           QMAKE=$Qt6_DIR/bin/qmake \
           ./linuxdeploy-x86_64.AppImage \
             --appdir deploy/AppDir \
-            --icon-file resources/logo.png \
+            --icon-file /tmp/CANBridge_icon.png \
             --desktop-file CANBridge.desktop \
             --plugin qt \
             --output appimage
