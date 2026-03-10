@@ -86,7 +86,7 @@ jobs:
       - name: Deploy Linux (AppImage)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          cmake --install build --prefix deploy/AppDir/usr
+          cmake --install build --prefix $(pwd)/deploy/AppDir/usr
 
           cat > CANBridge.desktop << 'EOF'
           [Desktop Entry]
