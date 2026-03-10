@@ -716,8 +716,14 @@ void MainWindow::onSendFramePeriodic(const CANFrame& frame, int intervalMs)
         }
 }
 
+/**
+ * @brief Stop periodic transmission for the frame with the given CAN ID.
+ *
+ * Removes the frame from the active periodic list of whichever transport
+ * (server or client) is currently running. If neither is active, the call
+ * is a no-op (the periodic list is already empty).
+ */
 void MainWindow::onStopFramePeriodic(const int& Id) {
-        // Stop periodic transmission
         if (server->isListening()) {
             server->removePeriodicFrame(Id);
         } else if (client->isConnected()) {
@@ -727,7 +733,12 @@ void MainWindow::onStopFramePeriodic(const int& Id) {
     }
 
 /**
- * Remove a frame widget from the simulator.
+ * @brief Remove a frame widget without showing a confirmation dialog.
+ *
+ * Stops any active periodic transmission for the frame, deletes the widget,
+ * removes it from the frameWidgets map, and refreshes the hidden-frame button.
+ * Used internally by loadProject(), onNewProject(), and the downgrade Clear-All path.
+ * For user-triggered removal (Remove button), see onFrameRemove().
  */
 void MainWindow::removeFrameSilent(uint32_t canId)
 {
@@ -745,6 +756,12 @@ void MainWindow::removeFrameSilent(uint32_t canId)
     addLogEvent(QString("Removed frame ID: 0x%1").arg(canId, 0, 16), "Frame");
 }
 
+/**
+ * @brief Show a confirmation dialog and remove the frame widget if confirmed.
+ *
+ * Called when a FrameWidget's Remove button is clicked. Presents a Yes/No
+ * dialog before delegating to removeFrameSilent() to do the actual teardown.
+ */
 void MainWindow::onFrameRemove(uint32_t canId)
 {
     if (frameWidgets.find(canId) == frameWidgets.end()) return;
@@ -1010,6 +1027,7 @@ void MainWindow::onServerClientDisconnected(const QString& address)
     addLogEvent(QString("Client disconnected: %1").arg(address), "Server");
 }
 
+/// Refresh the "Clients: N" label by querying the server's current connection count.
 void MainWindow::updateClientCountLabel()
 {
     int n = server->connectedClientCount();
@@ -1201,11 +1219,24 @@ void MainWindow::onLoadFrames()
 // CAN Type / ID Format — Apply helpers
 // ============================================================================
 
+/**
+ * @brief Returns true if switching from @p from to @p to is a bus-type downgrade.
+ *
+ * The CanType enum is ordered Classic(0) < FD(1) < XL(2), so a lower integer
+ * value means a more restrictive bus type. A downgrade requires a conflict check
+ * before applying, since existing frames may exceed the new payload limit.
+ */
 bool MainWindow::isDowngrade(CanType from, CanType to) const
 {
     return static_cast<int>(to) < static_cast<int>(from);
 }
 
+/**
+ * @brief Returns true if switching from @p from to @p to is an ID-format downgrade.
+ *
+ * Standard(0) → Extended(1) is an upgrade (wider IDs allowed).
+ * Extended(1) → Standard(0) is a downgrade (29-bit IDs become invalid).
+ */
 bool MainWindow::isDowngrade(IdFormat from, IdFormat to) const
 {
     return static_cast<int>(to) < static_cast<int>(from);
@@ -1620,6 +1651,15 @@ void MainWindow::updateLogDisplay()
 
 static constexpr int PROJECT_FILE_VERSION = 1;
 
+/**
+ * @brief Serialize the current application state to a JSON project file (.cbp).
+ *
+ * Saves two sections:
+ *  - "connection": CAN type, ID format, server port, client host+port
+ *  - "simulatorFrames": ordered list of all FrameWidget states (via toJson())
+ *
+ * On success, updates the window title and m_projectPath to the saved path.
+ */
 void MainWindow::saveProject(const QString& path)
 {
     // --- Connection settings ---
@@ -1653,6 +1693,17 @@ void MainWindow::saveProject(const QString& path)
     addLogEvent(QString("Project saved: %1").arg(path), "Server");
 }
 
+/**
+ * @brief Load and apply a project file (.cbp) from disk.
+ *
+ * Steps:
+ *  1. Parse the JSON file; abort with a warning on parse errors.
+ *  2. If any simulator frames exist, warn the user that they will be replaced.
+ *  3. Restore connection settings (CAN type, ID format, ports) directly —
+ *     no downgrade dialog, since the user explicitly chose this file.
+ *  4. Remove all current FrameWidgets and recreate them from the saved array.
+ *  5. Refresh the hidden-frame button and update the window title.
+ */
 void MainWindow::loadProject(const QString& path)
 {
     QFile file(path);
@@ -1727,6 +1778,13 @@ void MainWindow::loadProject(const QString& path)
     addLogEvent(QString("Project loaded: %1 (%2 frame(s))").arg(path).arg(frames.size()), "Server");
 }
 
+/**
+ * @brief Reset the application to a blank project.
+ *
+ * If any simulator frames exist, asks the user for confirmation before
+ * clearing them. Resets CAN type/format to Classic/Standard defaults,
+ * clears the project path, and restores the default window title.
+ */
 void MainWindow::onNewProject()
 {
     if (!frameWidgets.isEmpty()) {
@@ -1758,6 +1816,7 @@ void MainWindow::onNewProject()
     addLogEvent("New project created", "Server");
 }
 
+/// Show a file-open dialog and load the selected .cbp project file.
 void MainWindow::onOpenProject()
 {
     QString path = QFileDialog::getOpenFileName(
@@ -1766,6 +1825,7 @@ void MainWindow::onOpenProject()
     loadProject(path);
 }
 
+/// Save to the current project path, or prompt for a new path if unsaved.
 void MainWindow::onSaveProject()
 {
     if (m_projectPath.isEmpty())
@@ -1774,6 +1834,7 @@ void MainWindow::onSaveProject()
         saveProject(m_projectPath);
 }
 
+/// Show a file-save dialog and save to the chosen .cbp path (auto-appends extension).
 void MainWindow::onSaveProjectAs()
 {
     QString path = QFileDialog::getSaveFileName(
@@ -1784,7 +1845,16 @@ void MainWindow::onSaveProjectAs()
     saveProject(path);
 }
 
-// Auto-format hex input with spaces every 2 characters
+/**
+ * @brief Strip non-hex characters and reformat as "XX XX XX ..." (space every 2 chars).
+ *
+ * Used by the Analyzer data filter field to auto-format user input so it
+ * matches the space-separated format used in the Data column. The same logic
+ * lives in FrameWidget::formatHexWithSpaces() for the simulator data field.
+ *
+ * @param input Raw user-typed string.
+ * @return Cleaned uppercase hex string with spaces between every byte pair.
+ */
 QString MainWindow::formatHexWithSpaces(const QString& input)
 {
     // Remove all spaces and non-hex characters

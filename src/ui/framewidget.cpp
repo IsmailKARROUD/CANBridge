@@ -5,6 +5,19 @@
 #include <QRegularExpression>
 #include <limits>
 
+/**
+ * @brief Construct a FrameWidget with the given default CAN ID.
+ *
+ * Builds the entire widget layout in code (no .ui file):
+ *  Row 1: ID | DLC (spin or combo) | Data | Periodic checkbox + interval | Send | Stop | Hide | Remove
+ *  Row 2: Status label (validation errors, send results, periodic state)
+ *
+ * The DLC combo (FD mode) and DLC spinner (Classic/XL mode) are created
+ * simultaneously; only one is visible at any time, switched by setCanType().
+ *
+ * All signal connections live at the bottom of this constructor to keep
+ * widget creation and wiring clearly separated.
+ */
 FrameWidget::FrameWidget(uint32_t defaultId, QWidget *parent)
     : QWidget(parent)
     , currentCanId(defaultId)
@@ -323,6 +336,16 @@ bool FrameWidget::checkConnection()
 // Slot handlers
 // ============================================================================
 
+/**
+ * @brief Handle Send button click.
+ *
+ * Validates the CAN ID and data bytes against the current bus type and ID
+ * format before emitting the appropriate signal:
+ *  - One-shot: emits sendOnceClicked() and shows send result in status label.
+ *  - Periodic: emits onSendFramePeriodicClicked(), swaps Send→Stop button.
+ *
+ * Both buttons are disabled during validation to prevent double-clicks.
+ */
 void FrameWidget::onSend()
 {
     if (!checkConnection()) return;
@@ -392,6 +415,13 @@ void FrameWidget::onSend()
     }
 }
 
+/**
+ * @brief Handle Stop button click for periodic transmission.
+ *
+ * Re-validates the CAN ID (user may have edited it while running), then
+ * emits onStopFramePeriodicClicked() to remove the frame from the server
+ * or client periodic list. Swaps Stop→Send button on success.
+ */
 void FrameWidget::onStopFramePeriodic()
 {
     sendBtn->setEnabled(false);
@@ -417,6 +447,12 @@ void FrameWidget::onStopFramePeriodic()
     statusLabel->setStyleSheet("QLabel { color: grey; }");
 }
 
+/**
+ * @brief Update the status label when the Periodic checkbox is toggled.
+ *
+ * When checked: shows the current interval and enables intervalSpin.
+ * When unchecked: shows "Periodic stopped" (Send button still armed for one-shot use).
+ */
 void FrameWidget::onPeriodicToggled()
 {
     if (periodicCheckBox->isChecked()) {
@@ -428,17 +464,28 @@ void FrameWidget::onPeriodicToggled()
     }
 }
 
+/// Emit removeClicked() so MainWindow shows a confirmation dialog and removes this widget.
 void FrameWidget::onRemove()
 {
     emit removeClicked(currentCanId);
 }
 
+/// Hide this widget and emit hideClicked() so MainWindow updates the hidden-frame counter.
 void FrameWidget::onHide()
 {
     setVisible(false);
     emit hideClicked();
 }
 
+/**
+ * @brief Validate and commit a CAN ID change from the ID input field.
+ *
+ * Called on editingFinished (Enter or focus-out). If the new ID is invalid
+ * or out of range for the current format, the field is reverted silently.
+ * If the ID is valid and different from the current one, emits canIdChanged()
+ * so MainWindow can check for duplicates and update its frameWidgets map.
+ * Also updates the group box title to reflect the new ID.
+ */
 void FrameWidget::onCanIdChanged()
 {
     bool ok;
@@ -463,6 +510,20 @@ void FrameWidget::onCanIdChanged()
     }
 }
 
+/**
+ * @brief Auto-format data input and update DLC to match byte count.
+ *
+ * Called on every keystroke in the data field. Steps:
+ *  1. Format the raw input into "XX XX XX ..." spacing via formatHexWithSpaces().
+ *  2. Preserve the logical cursor position by compensating for spaces that
+ *     were inserted or removed during formatting (spacesBefore vs spacesAfter).
+ *  3. Warn if the final character count is odd (incomplete last byte).
+ *  4. Auto-snap DLC: Classic/XL — clamp to max bytes; FD — round up to
+ *     nearest valid DLC code using CANFrame::bytesToFdDlc().
+ *
+ * Signals are blocked during the setText() call to prevent this slot from
+ * re-entering itself.
+ */
 void FrameWidget::onDataChanged(const QString& text)
 {
     dataEdit->blockSignals(true);
@@ -470,6 +531,8 @@ void FrameWidget::onDataChanged(const QString& text)
     int cursorPos = dataEdit->cursorPosition();
     QString formatted = formatHexWithSpaces(text);
 
+    // Compute how many spaces existed before and after the cursor in both
+    // the old and new strings so we can shift the cursor by the difference.
     int spacesBefore = text.first(qMin(cursorPos, text.length())).count(' ');
     int adjustedPos  = qMin(cursorPos + (formatted.count(' ') - spacesBefore), formatted.length());
     int spacesAfter  = formatted.first(adjustedPos).count(' ');
@@ -503,6 +566,20 @@ void FrameWidget::onDataChanged(const QString& text)
     }
 }
 
+/**
+ * @brief Strip non-hex characters and reformat as "XX XX XX ..." (space every 2 chars).
+ *
+ * Steps:
+ *  1. Uppercase the input.
+ *  2. Remove any character that is not 0-9 or A-F.
+ *  3. Re-insert a space before every even-indexed character (index 2, 4, 6, ...).
+ *
+ * This is used both by the data field (onDataChanged) and the filter bar
+ * in the Analyzer tab, so they share identical formatting behaviour.
+ *
+ * @param input Raw user-typed string (may include spaces or garbage characters).
+ * @return Cleaned, uppercase, space-separated hex string.
+ */
 QString FrameWidget::formatHexWithSpaces(const QString& input)
 {
     QString cleaned = input.toUpper();
