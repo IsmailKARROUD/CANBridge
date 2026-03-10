@@ -586,6 +586,9 @@ void MainWindow::addFrameWidget(uint32_t defaultId)
     connect(widget, &FrameWidget::onSendFramePeriodicClicked, this, &MainWindow::onSendFramePeriodic);
     connect(widget, &FrameWidget::onStopFramePeriodicClicked, this, &MainWindow::onStopFramePeriodic);
     connect(widget, &FrameWidget::removeClicked, this, &MainWindow::onFrameRemove);
+    connect(widget, &FrameWidget::logWarning, this, [this](const QString& msg) {
+        addLogEvent("⚠ " + msg, "Frame");
+    });
 
 
     connect(widget, &FrameWidget::hideClicked, this, [this, widget]() {

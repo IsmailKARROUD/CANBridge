@@ -98,6 +98,7 @@ signals:
     void removeClicked(uint32_t canId);
     void hideClicked();
     void canIdChanged(uint32_t oldId, uint32_t newId);
+    void logWarning(const QString& message);
 
 private slots:
     void onSend();

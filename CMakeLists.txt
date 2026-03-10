@@ -70,7 +70,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set project version (used by version.h.in template)
 project(CANBridge
-    VERSION 0.3.0
+    VERSION 0.3.1
     LANGUAGES CXX
 )
 

@@ -396,6 +396,30 @@ void FrameWidget::onSend()
         data.append(static_cast<char>(byte));
     }
 
+    // --- Auto-correct DLC if it doesn't match actual data byte count ---
+    bool dlcCorrected = false;
+    if (m_canType == CanType::FD) {
+        int correctCode = CANFrame::bytesToFdDlc(data.size());
+        if (dlcComboFD->currentIndex() != correctCode) {
+            int oldBytes = CANFrame::FD_DLC_TABLE[dlcComboFD->currentIndex()];
+            int newBytes = CANFrame::FD_DLC_TABLE[correctCode];
+            dlcComboFD->setCurrentIndex(correctCode);
+            dlcCorrected = true;
+            emit logWarning(QString("DLC auto-corrected for ID 0x%1: %2 → %3 bytes (FD)")
+                                .arg(id, 0, 16).arg(oldBytes).arg(newBytes));
+        }
+    } else {
+        int maxDlc     = (m_canType == CanType::XL) ? 2048 : 8;
+        int correctDlc = qMin(data.size(), maxDlc);
+        if (dlcSpin->value() != correctDlc) {
+            int oldDlc = dlcSpin->value();
+            dlcSpin->setValue(correctDlc);
+            dlcCorrected = true;
+            emit logWarning(QString("DLC auto-corrected for ID 0x%1: %2 → %3 bytes")
+                                .arg(id, 0, 16).arg(oldDlc).arg(correctDlc));
+        }
+    }
+
     CANFrame frame(id, static_cast<quint16>(getEffectiveDlc()), data, m_canType, m_idFormat);
 
     if (periodicCheckBox->isChecked()) {
@@ -403,15 +427,25 @@ void FrameWidget::onSend()
         sendBtn->setVisible(false);
         stopBtn->setVisible(true);
         stopBtn->setEnabled(true);
-        statusLabel->setText(QString("✓ Sending ID: 0x%1").arg(id, 0, 16));
-        statusLabel->setStyleSheet("QLabel { color: green; }");
+        if (dlcCorrected) {
+            statusLabel->setText(QString("⚠ DLC auto-corrected · Sending ID: 0x%1").arg(id, 0, 16));
+            statusLabel->setStyleSheet("QLabel { color: orange; }");
+        } else {
+            statusLabel->setText(QString("✓ Sending ID: 0x%1").arg(id, 0, 16));
+            statusLabel->setStyleSheet("QLabel { color: green; }");
+        }
     } else {
         emit sendOnceClicked(frame);
         sendBtn->setVisible(true);
         stopBtn->setVisible(false);
         sendBtn->setEnabled(true);
-        statusLabel->setText(QString("✓ Sent ID: 0x%1").arg(id, 0, 16));
-        statusLabel->setStyleSheet("QLabel { color: green; }");
+        if (dlcCorrected) {
+            statusLabel->setText(QString("⚠ DLC auto-corrected · Sent ID: 0x%1").arg(id, 0, 16));
+            statusLabel->setStyleSheet("QLabel { color: orange; }");
+        } else {
+            statusLabel->setText(QString("✓ Sent ID: 0x%1").arg(id, 0, 16));
+            statusLabel->setStyleSheet("QLabel { color: green; }");
+        }
     }
 }
 
