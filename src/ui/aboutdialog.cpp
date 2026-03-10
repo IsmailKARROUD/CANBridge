@@ -11,6 +11,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QApplication>
+#include <QPixmap>
 
 /**
  * Build the About dialog layout with centered labels for:
@@ -27,17 +28,15 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent)
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
-    // Application title
-    QLabel* titleLabel = new QLabel("CANBridge");
-    QFont titleFont;
-    titleFont.setPointSize(24);
-    titleFont.setBold(true);
-    titleLabel->setFont(titleFont);
+    // Application logo
+    QLabel* titleLabel = new QLabel();
+    QPixmap logo(":/logo.png");
+    titleLabel->setPixmap(logo.scaledToHeight(90, Qt::SmoothTransformation));
     titleLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(titleLabel);
 
     // Version (injected at build time via CMake configure_file)
-    QLabel* versionLabel = new QLabel(QString("Version %1").arg(APP_VERSION));
+    QLabel* versionLabel = new QLabel(QString("Version: %1").arg(APP_VERSION));
     versionLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(versionLabel);
 
